@@ -7,8 +7,8 @@ from io import BytesIO
 from supabase import create_client, Client
 
 # Configuración de Supabase
-SUPABASE_URL = "https://aispdrqeugwxfhghzkcd.supabase.co"  # Cambia por tu URL de Supabase
-SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpc3BkcnFldWd3eGZoZ2h6a2NkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzM2NzkxMzgsImV4cCI6MjA0OTI1NTEzOH0.irvfK6Wdo_OMqU29Bhz941t6-y-Zg-YuIpqXNbM3COU"  # Cambia por tu clave de API
+SUPABASE_URL = "https://rtporjxjyrkttnvjtqmg.supabase.co"  # Cambia por tu URL de Supabase
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0cG9yanhqeXJrdHRudmp0cW1nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjY2OTEzNDAsImV4cCI6MjA0MjI2NzM0MH0.ghyQtdPB-db6_viDlJlQDLDL_h7tAukRWycVyfAE6zk"  # Cambia por tu clave de API
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # Función para cargar el modelo desde Supabase
@@ -34,20 +34,23 @@ def leer_registros():
 def agregar_registro(registro):
     try:
         response = supabase.table("nuevos_datos").insert(registro).execute()
+        st.write("Respuesta de Supabase:", response)
     except Exception as e:
         st.error(f"Error al agregar el registro: {e}")
 
 # Función para actualizar un registro
 def actualizar_registro(id_pedido, valores_actualizados):
     try:
-        supabase.table("nuevos_datos").update(valores_actualizados).eq("ID_Pedido", id_pedido).execute()
+        response = supabase.table("nuevos_datos").update(valores_actualizados).eq("ID_Pedido", id_pedido).execute()
+        st.write("Respuesta de Supabase al actualizar:", response)
     except Exception as e:
         st.error(f"Error al actualizar el registro: {e}")
 
 # Función para eliminar un registro
 def eliminar_registro(id_pedido):
     try:
-        supabase.table("nuevos_datos").delete().eq("ID_Pedido", id_pedido).execute()
+        response = supabase.table("nuevos_datos").delete().eq("ID_Pedido", id_pedido).execute()
+        st.write("Respuesta de Supabase al eliminar:", response)
     except Exception as e:
         st.error(f"Error al eliminar el registro: {e}")
 
@@ -97,58 +100,48 @@ with tabs[1]:
         prediccion = modelo.predict(input_modelo)[0]
         nuevo_registro["Tiempo_Entrega_min"] = int(prediccion)
 
+        # Mostrar datos antes de insertar
+        st.write("Datos a insertar (debug):", nuevo_registro)
+
         agregar_registro(nuevo_registro)
         st.success(f"Pedido creado correctamente. Tiempo estimado de entrega: {prediccion:.2f} minutos.")
 
 # Pestaña: Modificar Pedido
 with tabs[2]:
     st.subheader("Modificar un pedido existente")
-    registros = leer_registros()
+    id_actualizar = st.number_input("ID del Pedido a modificar", min_value=0, step=1)
+    distancia = st.number_input("Nueva Distancia (km)", min_value=0.0)
+    clima = st.selectbox("Nuevo Clima", options=clima_opciones)
+    nivel_trafico = st.selectbox("Nuevo Nivel de Tráfico", options=nivel_trafico_opciones)
+    momento_dia = st.selectbox("Nuevo Momento del Día", options=momento_dia_opciones)
+    tipo_vehiculo = st.selectbox("Nuevo Tipo de Vehículo", options=tipo_vehiculo_opciones)
+    tiempo_preparacion = st.number_input("Nuevo Tiempo de Preparación (min)", min_value=0)
+    experiencia = st.number_input("Nueva Experiencia del Repartidor (años)", min_value=0.0)
 
-    if not registros.empty:
-        ids = registros["ID_Pedido"].tolist()
-        id_actualizar = st.selectbox("Selecciona el ID del Pedido a modificar", options=ids)
+    if st.button("Actualizar y Predecir Pedido"):
+        valores_actualizados = {
+            "Distancia_km": float(distancia),
+            "Clima": int(clima_opciones.index(clima)),
+            "Nivel_Trafico": int(nivel_trafico_opciones.index(nivel_trafico)),
+            "Momento_Del_Dia": int(momento_dia_opciones.index(momento_dia)),
+            "Tipo_Vehiculo": int(tipo_vehiculo_opciones.index(tipo_vehiculo)),
+            "Tiempo_Preparacion_min": int(tiempo_preparacion),
+            "Experiencia_Repartidor_anos": float(experiencia),
+        }
+        input_modelo = pd.DataFrame([valores_actualizados])
+        prediccion = modelo.predict(input_modelo)[0]
+        valores_actualizados["Tiempo_Entrega_min"] = int(prediccion)
 
-        registro_seleccionado = registros[registros["ID_Pedido"] == id_actualizar].iloc[0]
+        # Mostrar datos antes de actualizar
+        st.write("Datos a actualizar (debug):", valores_actualizados)
 
-        distancia = st.number_input("Nueva Distancia (km)", min_value=0.0, value=registro_seleccionado["Distancia_km"])
-        clima = st.selectbox("Nuevo Clima", options=clima_opciones, index=registro_seleccionado["Clima"])
-        nivel_trafico = st.selectbox("Nuevo Nivel de Tráfico", options=nivel_trafico_opciones, index=registro_seleccionado["Nivel_Trafico"])
-        momento_dia = st.selectbox("Nuevo Momento del Día", options=momento_dia_opciones, index=registro_seleccionado["Momento_Del_Dia"])
-        tipo_vehiculo = st.selectbox("Nuevo Tipo de Vehículo", options=tipo_vehiculo_opciones, index=registro_seleccionado["Tipo_Vehiculo"])
-        tiempo_preparacion = st.number_input("Nuevo Tiempo de Preparación (min)", min_value=0, value=registro_seleccionado["Tiempo_Preparacion_min"])
-        experiencia = st.number_input("Nueva Experiencia del Repartidor (años)", min_value=0.0, value=registro_seleccionado["Experiencia_Repartidor_anos"])
-
-        if st.button("Actualizar y Predecir Pedido"):
-            valores_actualizados = {
-                "Distancia_km": float(distancia),
-                "Clima": int(clima_opciones.index(clima)),
-                "Nivel_Trafico": int(nivel_trafico_opciones.index(nivel_trafico)),
-                "Momento_Del_Dia": int(momento_dia_opciones.index(momento_dia)),
-                "Tipo_Vehiculo": int(tipo_vehiculo_opciones.index(tipo_vehiculo)),
-                "Tiempo_Preparacion_min": int(tiempo_preparacion),
-                "Experiencia_Repartidor_anos": float(experiencia),
-            }
-            input_modelo = pd.DataFrame([valores_actualizados])
-            prediccion = modelo.predict(input_modelo)[0]
-            valores_actualizados["Tiempo_Entrega_min"] = int(prediccion)
-
-            actualizar_registro(id_actualizar, valores_actualizados)
-            st.success(f"Pedido actualizado correctamente. Tiempo estimado de entrega: {prediccion:.2f} minutos.")
-    else:
-        st.warning("No hay registros disponibles para modificar.")
+        actualizar_registro(id_actualizar, valores_actualizados)
+        st.success(f"Pedido actualizado correctamente. Tiempo estimado de entrega: {prediccion:.2f} minutos.")
 
 # Pestaña: Eliminar Pedido
 with tabs[3]:
     st.subheader("Eliminar un pedido existente")
-    registros = leer_registros()
-
-    if not registros.empty:
-        ids = registros["ID_Pedido"].tolist()
-        id_eliminar = st.selectbox("Selecciona el ID del Pedido para eliminar", options=ids)
-
-        if st.button("Eliminar Pedido"):
-            eliminar_registro(id_eliminar)
-            st.success("Pedido eliminado correctamente")
-    else:
-        st.warning("No hay registros disponibles para eliminar.")
+    id_eliminar = st.number_input("ID del Pedido para eliminar", min_value=0, step=1)
+    if st.button("Eliminar Pedido"):
+        eliminar_registro(id_eliminar)
+        st.success("Pedido eliminado correctamente")
