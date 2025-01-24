@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import requests
 import xgboost as xgb
-import json
+import io
 import numpy as np
 
 # Configuración de Supabase
@@ -17,14 +17,14 @@ headers = {
     "Content-Type": "application/json"
 }
 
-# Función para cargar el modelo desde el almacenamiento de Supabase
+# Función para cargar el modelo desde el almacenamiento de Supabase en memoria
 def load_model_from_supabase():
     url = f"{SUPABASE_URL}/storage/v1/object/public/{STORAGE_BUCKET}/{MODEL_FILENAME}"
     response = requests.get(url, headers=headers)
     if response.status_code == 200:
-        model_json = response.content.decode('utf-8')
+        # Cargar el modelo directamente desde el contenido en memoria
         model = xgb.Booster()
-        model.load_model(json.loads(model_json))  # Carga el modelo desde el JSON
+        model.load_model(io.BytesIO(response.content))  # Leer desde BytesIO sin guardarlo localmente
         return model
     else:
         st.error(f"No se pudo cargar el modelo desde Supabase. Error: {response.text}")
