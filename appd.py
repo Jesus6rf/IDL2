@@ -92,11 +92,10 @@ if model:
             nivel_trafico = st.selectbox("Nivel de tráfico", ["Bajo", "Medio", "Alto"])
             momento_del_dia = st.selectbox("Momento del día", ["Mañana", "Tarde", "Noche", "Madrugada"])
             tipo_vehiculo = st.selectbox("Tipo de vehículo", ["Bicicleta", "Patineta", "Moto", "Auto"])
-            
-            # Botones del formulario
+
             calcular_prediccion = st.form_submit_button("Calcular Predicción")
             submit_new = st.form_submit_button("Crear Pedido")
-            
+
             input_data = {
                 "distancia_km": distancia_km,
                 "tiempo_preparacion_min": tiempo_preparacion_min,
@@ -107,7 +106,6 @@ if model:
                 "tipo_vehiculo": tipo_vehiculo,
             }
 
-            # Lógica para predicción
             if calcular_prediccion:
                 input_df = pd.DataFrame([input_data])
                 encoded_df = pd.get_dummies(input_df, columns=["clima", "nivel_trafico", "momento_del_dia", "tipo_vehiculo"])
@@ -118,7 +116,6 @@ if model:
                 tiempo_predicho = predict(model, encoded_df)
                 st.write(f"**Tiempo estimado de entrega:** {tiempo_predicho:.2f} minutos")
 
-            # Lógica para guardar el pedido
             if submit_new:
                 input_df = pd.DataFrame([input_data])
                 encoded_df = pd.get_dummies(input_df, columns=["clima", "nivel_trafico", "momento_del_dia", "tipo_vehiculo"])
@@ -146,20 +143,21 @@ if model:
                 nivel_trafico = st.selectbox("Nivel de tráfico", ["Bajo", "Medio", "Alto"], index=["Bajo", "Medio", "Alto"].index(selected_pedido["nivel_trafico"]))
                 momento_del_dia = st.selectbox("Momento del día", ["Mañana", "Tarde", "Noche", "Madrugada"], index=["Mañana", "Tarde", "Noche", "Madrugada"].index(selected_pedido["momento_del_dia"]))
                 tipo_vehiculo = st.selectbox("Tipo de vehículo", ["Bicicleta", "Patineta", "Moto", "Auto"], index=["Bicicleta", "Patineta", "Moto", "Auto"].index(selected_pedido["tipo_vehiculo"]))
-                
+
                 calcular_prediccion_mod = st.form_submit_button("Calcular Predicción")
                 submit_update = st.form_submit_button("Actualizar Pedido")
 
-                if calcular_prediccion_mod:
-                    updated_data = {
-                        "distancia_km": distancia_km,
-                        "tiempo_preparacion_min": tiempo_preparacion_min,
-                        "experiencia_repartidor_anos": experiencia_repartidor_anos,
-                        "clima": clima,
-                        "nivel_trafico": nivel_trafico,
-                        "momento_del_dia": momento_del_dia,
-                        "tipo_vehiculo": tipo_vehiculo,
-                    }
+                updated_data = {
+                    "distancia_km": distancia_km,
+                    "tiempo_preparacion_min": tiempo_preparacion_min,
+                    "experiencia_repartidor_anos": experiencia_repartidor_anos,
+                    "clima": clima,
+                    "nivel_trafico": nivel_trafico,
+                    "momento_del_dia": momento_del_dia,
+                    "tipo_vehiculo": tipo_vehiculo,
+                }
+
+                if calcular_prediccion_mod or submit_update:
                     updated_df = pd.DataFrame([updated_data])
                     encoded_df = pd.get_dummies(updated_df, columns=["clima", "nivel_trafico", "momento_del_dia", "tipo_vehiculo"])
                     for col in model.feature_names:
@@ -168,9 +166,9 @@ if model:
                     encoded_df = encoded_df[model.feature_names]
                     tiempo_predicho = predict(model, encoded_df)
                     st.write(f"**Tiempo estimado de entrega:** {tiempo_predicho:.2f} minutos")
+                    updated_data["tiempo_entrega_min"] = tiempo_predicho
 
                 if submit_update:
-                    updated_data["tiempo_entrega_min"] = tiempo_predicho
                     update_pedido(pedido_id, updated_data)
 
     # Tab: Borrar Pedido
