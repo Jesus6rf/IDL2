@@ -1,4 +1,4 @@
-import streamlit as st 
+import streamlit as st
 import pandas as pd
 import requests
 import xgboost as xgb
@@ -65,27 +65,35 @@ if submit:
     model = load_model_from_supabase()
 
     if model:
-        # Crear el registro de características
-        feature_mapping = {
-            "Clima": {"Despejado": 0, "Lluvioso": 1, "Ventoso": 2, "Niebla": 3},
-            "Nivel de tráfico": {"Bajo": 0, "Medio": 1, "Alto": 2},
-            "Momento del día": {"Mañana": 0, "Tarde": 1, "Noche": 2, "Madrugada": 3},
-            "Tipo de vehículo": {"Bicicleta": 0, "Patineta": 1, "Moto": 2, "Auto": 3}
-        }
-
         try:
-            # Preprocesar los datos
-            record = np.array([[
-                distancia_km,
-                tiempo_preparacion_min,
-                experiencia_repartidor_anos,
-                feature_mapping["Clima"][clima],
-                feature_mapping["Nivel de tráfico"][nivel_trafico],
-                feature_mapping["Momento del día"][momento_del_dia],
-                feature_mapping["Tipo de vehículo"][tipo_vehiculo]
-            ]])
+            # Crear el registro de entrada
+            input_data = {
+                "Distancia_km": distancia_km,
+                "Tiempo_Preparacion_min": tiempo_preparacion_min,
+                "Experiencia_Repartidor_anos": experiencia_repartidor_anos,
+                "Clima": clima,
+                "Nivel_Trafico": nivel_trafico,
+                "Momento_Del_Dia": momento_del_dia,
+                "Tipo_Vehiculo": tipo_vehiculo,
+            }
 
-            dmatrix = xgb.DMatrix(record)
+            # Convertir a DataFrame
+            input_df = pd.DataFrame([input_data])
+
+            # Aplicar One-Hot Encoding para las variables categóricas
+            encoded_df = pd.get_dummies(input_df, columns=["Clima", "Nivel_Trafico", "Momento_Del_Dia", "Tipo_Vehiculo"])
+
+            # Asegurar que las columnas coincidan con las del modelo
+            expected_columns = model.feature_names
+            for col in expected_columns:
+                if col not in encoded_df.columns:
+                    encoded_df[col] = 0  # Agregar columnas faltantes con valor 0
+
+            # Reordenar las columnas para coincidir con el modelo
+            encoded_df = encoded_df[expected_columns]
+
+            # Convertir a DMatrix para la predicción
+            dmatrix = xgb.DMatrix(encoded_df)
             tiempo_predicho = model.predict(dmatrix)[0]
 
             # Mostrar el resultado
