@@ -23,27 +23,34 @@ modelo = cargar_modelo()
 
 # Función para leer registros desde Supabase
 def leer_registros():
-    data = supabase.table("nuevos_datos").select("*").execute()
-    return pd.DataFrame(data.data)
+    try:
+        data = supabase.table("nuevos_datos").select("*").execute()
+        return pd.DataFrame(data.data)
+    except Exception as e:
+        st.error(f"Error al leer registros: {e}")
+        return pd.DataFrame()
 
 # Función para agregar un nuevo registro
 def agregar_registro(registro):
     try:
-        supabase.table("nuevos_datos").insert(registro).execute()
+        response = supabase.table("nuevos_datos").insert(registro).execute()
+        st.write("Respuesta de Supabase:", response)
     except Exception as e:
         st.error(f"Error al agregar el registro: {e}")
 
 # Función para actualizar un registro
 def actualizar_registro(id_pedido, valores_actualizados):
     try:
-        supabase.table("nuevos_datos").update(valores_actualizados).eq("ID_Pedido", id_pedido).execute()
+        response = supabase.table("nuevos_datos").update(valores_actualizados).eq("ID_Pedido", id_pedido).execute()
+        st.write("Respuesta de Supabase al actualizar:", response)
     except Exception as e:
         st.error(f"Error al actualizar el registro: {e}")
 
 # Función para eliminar un registro
 def eliminar_registro(id_pedido):
     try:
-        supabase.table("nuevos_datos").delete().eq("ID_Pedido", id_pedido).execute()
+        response = supabase.table("nuevos_datos").delete().eq("ID_Pedido", id_pedido).execute()
+        st.write("Respuesta de Supabase al eliminar:", response)
     except Exception as e:
         st.error(f"Error al eliminar el registro: {e}")
 
@@ -94,7 +101,7 @@ with tabs[1]:
         nuevo_registro["Tiempo_Entrega_min"] = int(prediccion)
 
         # Mostrar datos antes de insertar
-        st.write("Datos a insertar:", nuevo_registro)
+        st.write("Datos a insertar (debug):", nuevo_registro)
 
         agregar_registro(nuevo_registro)
         st.success(f"Pedido creado correctamente. Tiempo estimado de entrega: {prediccion:.2f} minutos.")
@@ -126,7 +133,7 @@ with tabs[2]:
         valores_actualizados["Tiempo_Entrega_min"] = int(prediccion)
 
         # Mostrar datos antes de actualizar
-        st.write("Datos a actualizar:", valores_actualizados)
+        st.write("Datos a actualizar (debug):", valores_actualizados)
 
         actualizar_registro(id_actualizar, valores_actualizados)
         st.success(f"Pedido actualizado correctamente. Tiempo estimado de entrega: {prediccion:.2f} minutos.")
