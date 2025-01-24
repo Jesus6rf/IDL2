@@ -17,14 +17,18 @@ headers = {
     "Content-Type": "application/json"
 }
 
-# Función para cargar el modelo desde el almacenamiento de Supabase en memoria
+# Función para cargar el modelo desde el almacenamiento de Supabase
 def load_model_from_supabase():
     url = f"{SUPABASE_URL}/storage/v1/object/public/{STORAGE_BUCKET}/{MODEL_FILENAME}"
     response = requests.get(url, headers=headers)
     if response.status_code == 200:
-        # Cargar el modelo directamente desde el contenido en memoria
+        # Guardar el contenido como un archivo temporal
+        with open("temp_model.json", "wb") as f:
+            f.write(response.content)
+        
+        # Cargar el modelo desde el archivo temporal
         model = xgb.Booster()
-        model.load_model(io.BytesIO(response.content))  # Leer desde BytesIO sin guardarlo localmente
+        model.load_model("temp_model.json")
         return model
     else:
         st.error(f"No se pudo cargar el modelo desde Supabase. Error: {response.text}")
