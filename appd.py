@@ -97,7 +97,6 @@ if model:
             calcular_prediccion = st.form_submit_button("Calcular Predicción")
             submit_new = st.form_submit_button("Crear Pedido")
             
-            # Inicializar input_data
             input_data = {
                 "distancia_km": distancia_km,
                 "tiempo_preparacion_min": tiempo_preparacion_min,
@@ -112,17 +111,15 @@ if model:
             if calcular_prediccion:
                 input_df = pd.DataFrame([input_data])
                 encoded_df = pd.get_dummies(input_df, columns=["clima", "nivel_trafico", "momento_del_dia", "tipo_vehiculo"])
-                expected_columns = model.feature_names
-                for col in expected_columns:
+                for col in model.feature_names:
                     if col not in encoded_df.columns:
                         encoded_df[col] = 0
-                encoded_df = encoded_df[expected_columns]
+                encoded_df = encoded_df[model.feature_names]
                 tiempo_predicho = predict(model, encoded_df)
                 st.write(f"**Tiempo estimado de entrega:** {tiempo_predicho:.2f} minutos")
 
             # Lógica para guardar el pedido
             if submit_new:
-                # Realizar predicción antes de guardar
                 input_df = pd.DataFrame([input_data])
                 encoded_df = pd.get_dummies(input_df, columns=["clima", "nivel_trafico", "momento_del_dia", "tipo_vehiculo"])
                 for col in model.feature_names:
@@ -131,8 +128,6 @@ if model:
                 encoded_df = encoded_df[model.feature_names]
                 tiempo_predicho = predict(model, encoded_df)
                 input_data["tiempo_entrega_min"] = tiempo_predicho
-
-                # Guardar en Supabase
                 insert_data_to_supabase(input_data)
 
     # Tab: Modificar Pedido
@@ -151,8 +146,9 @@ if model:
                 nivel_trafico = st.selectbox("Nivel de tráfico", ["Bajo", "Medio", "Alto"], index=["Bajo", "Medio", "Alto"].index(selected_pedido["nivel_trafico"]))
                 momento_del_dia = st.selectbox("Momento del día", ["Mañana", "Tarde", "Noche", "Madrugada"], index=["Mañana", "Tarde", "Noche", "Madrugada"].index(selected_pedido["momento_del_dia"]))
                 tipo_vehiculo = st.selectbox("Tipo de vehículo", ["Bicicleta", "Patineta", "Moto", "Auto"], index=["Bicicleta", "Patineta", "Moto", "Auto"].index(selected_pedido["tipo_vehiculo"]))
-                submit_update = st.form_submit_button("Actualizar Pedido")
+                
                 calcular_prediccion_mod = st.form_submit_button("Calcular Predicción")
+                submit_update = st.form_submit_button("Actualizar Pedido")
 
                 if calcular_prediccion_mod:
                     updated_data = {
