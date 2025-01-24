@@ -23,20 +23,20 @@ modelo = cargar_modelo()
 
 # Función para leer registros desde Supabase
 def leer_registros():
-    data = supabase.table("Registro_Datos").select("*").execute()
+    data = supabase.table("registro_Datos").select("*").execute()
     return pd.DataFrame(data.data)
 
 # Función para agregar un nuevo registro
 def agregar_registro(registro):
-    supabase.table("Registro_Datos").insert(registro).execute()
+    supabase.table("registro_Datos").insert(registro).execute()
 
 # Función para actualizar un registro
 def actualizar_registro(id_pedido, valores_actualizados):
-    supabase.table("Registro_Datos").update(valores_actualizados).eq("ID_Pedido", id_pedido).execute()
+    supabase.table("registro_Datos").update(valores_actualizados).eq("ID_Pedido", id_pedido).execute()
 
 # Función para eliminar un registro
 def eliminar_registro(id_pedido):
-    supabase.table("Registro_Datos").delete().eq("ID_Pedido", id_pedido).execute()
+    supabase.table("registro_Datos").delete().eq("ID_Pedido", id_pedido).execute()
 
 # Opciones de listas desplegables
 clima_opciones = ["Despejado", "Lluvioso", "Nublado", "Ventoso"]
