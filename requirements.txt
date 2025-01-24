@@ -1,7 +1,5 @@
 streamlit
+supabase
+scikit-learn
 pandas
 numpy
-requests
-scikit-learn
-json
-pickle
