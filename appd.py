@@ -67,11 +67,36 @@ def delete_pedido(pedido_id):
     else:
         st.error(f"Error al eliminar el pedido: {response.text}")
 
-# Función para realizar la predicción
 def predict(model, record):
+    # Crear DMatrix con los datos de entrada
+    st.write("Datos enviados al modelo para predicción:")
+    st.write(record)
     dmatrix = xgb.DMatrix(record)
     prediccion = model.predict(dmatrix)[0]
     return float(prediccion)
+
+# En la sección de predicción:
+if calcular_prediccion or submit_new:
+    # Convertir el registro a DataFrame y codificar
+    input_df = pd.DataFrame([input_data])
+    encoded_df = pd.get_dummies(input_df, columns=["clima", "nivel_trafico", "momento_del_dia", "tipo_vehiculo"])
+    
+    # Asegurar que todas las columnas esperadas estén presentes
+    for col in model.feature_names:
+        if col not in encoded_df.columns:
+            encoded_df[col] = 0
+
+    # Reorganizar las columnas para que coincidan con el modelo
+    encoded_df = encoded_df[model.feature_names]
+    
+    # **Imprimir datos para depuración**
+    st.write("Datos después de la codificación y alineación:")
+    st.write(encoded_df)
+    
+    # Realizar la predicción
+    tiempo_predicho = predict(model, encoded_df)
+    st.write(f"**Tiempo estimado de entrega:** {tiempo_predicho:.2f} minutos")
+
 
 # Configuración de Streamlit
 st.title("Gestión de Pedidos con Predicción")
