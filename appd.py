@@ -6,8 +6,8 @@ import io
 import numpy as np
 
 # Configuración de Supabase
-SUPABASE_URL = "https://rtporjxjyrkttnvjtqmg.supabase.co"  # Cambia con tu URL de Supabase
-SUPABASE_KEY = "TU_CLAVE_API"  # Cambia con tu clave API
+SUPABASE_URL = "https://aispdrqeugwxfhghzkcd.supabase.co"  # Cambia con tu URL de Supabase
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpc3BkcnFldWd3eGZoZ2h6a2NkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzM2NzkxMzgsImV4cCI6MjA0OTI1NTEzOH0.irvfK6Wdo_OMqU29Bhz941t6-y-Zg-YuIpqXNbM3COU"  # Cambia con tu clave API
 STORAGE_BUCKET = "modelorf"  # Nombre del bucket
 MODEL_FILENAME = "best_random_forest_model.pkl"  # Nombre del modelo en el bucket
 
