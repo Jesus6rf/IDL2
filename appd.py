@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import requests
 import xgboost as xgb
-import io
 import numpy as np
 
 # Configuración de Supabase
@@ -94,21 +93,21 @@ if submit:
 
             # Convertir a DMatrix para la predicción
             dmatrix = xgb.DMatrix(encoded_df)
-            tiempo_predicho = model.predict(dmatrix)[0]
+            tiempo_predicho = float(model.predict(dmatrix)[0])  # Convertir a float para evitar problemas de serialización
 
             # Mostrar el resultado
             st.write(f"**Tiempo estimado de entrega:** {tiempo_predicho:.2f} minutos")
 
             # Preparar el registro para la base de datos
             registro = {
-                "distancia_km": distancia_km,
-                "tiempo_preparacion_min": tiempo_preparacion_min,
-                "experiencia_repartidor_anos": experiencia_repartidor_anos,
+                "distancia_km": float(distancia_km),
+                "tiempo_preparacion_min": int(tiempo_preparacion_min),
+                "experiencia_repartidor_anos": float(experiencia_repartidor_anos),
                 "clima": clima,
                 "nivel_trafico": nivel_trafico,
                 "momento_del_dia": momento_del_dia,
                 "tipo_vehiculo": tipo_vehiculo,
-                "tiempo_entrega_min": tiempo_predicho
+                "tiempo_entrega_min": tiempo_predicho  # Convertido a float
             }
 
             # Guardar el registro en Supabase
