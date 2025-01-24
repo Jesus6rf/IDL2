@@ -84,8 +84,9 @@ if model:
             momento_del_dia = st.selectbox("Momento del día", ["Mañana", "Tarde", "Noche", "Madrugada"])
             tipo_vehiculo = st.selectbox("Tipo de vehículo", ["Bicicleta", "Patineta", "Moto", "Auto"])
             submit_new = st.form_submit_button("Crear Pedido")
+            calcular_prediccion = st.form_submit_button("Calcular Predicción")
 
-            if submit_new:
+            if calcular_prediccion:
                 input_data = {
                     "distancia_km": distancia_km,
                     "tiempo_preparacion_min": tiempo_preparacion_min,
@@ -103,7 +104,9 @@ if model:
                         encoded_df[col] = 0
                 encoded_df = encoded_df[expected_columns]
                 tiempo_predicho = predict(model, encoded_df)
-                input_data["tiempo_entrega_min"] = tiempo_predicho
+                st.write(f"**Tiempo estimado de entrega:** {tiempo_predicho:.2f} minutos")
+
+            if submit_new:
                 insert_data_to_supabase(input_data)
 
     # Tab: Modificar Pedido
@@ -123,8 +126,9 @@ if model:
                 momento_del_dia = st.selectbox("Momento del día", ["Mañana", "Tarde", "Noche", "Madrugada"], index=["Mañana", "Tarde", "Noche", "Madrugada"].index(selected_pedido["momento_del_dia"]))
                 tipo_vehiculo = st.selectbox("Tipo de vehículo", ["Bicicleta", "Patineta", "Moto", "Auto"], index=["Bicicleta", "Patineta", "Moto", "Auto"].index(selected_pedido["tipo_vehiculo"]))
                 submit_update = st.form_submit_button("Actualizar Pedido")
+                calcular_prediccion_mod = st.form_submit_button("Calcular Predicción")
 
-                if submit_update:
+                if calcular_prediccion_mod:
                     updated_data = {
                         "distancia_km": distancia_km,
                         "tiempo_preparacion_min": tiempo_preparacion_min,
@@ -141,5 +145,7 @@ if model:
                             encoded_df[col] = 0
                     encoded_df = encoded_df[model.feature_names]
                     tiempo_predicho = predict(model, encoded_df)
-                    updated_data["tiempo_entrega_min"] = tiempo_predicho
+                    st.write(f"**Tiempo estimado de entrega:** {tiempo_predicho:.2f} minutos")
+
+                if submit_update:
                     update_pedido(pedido_id, updated_data)
