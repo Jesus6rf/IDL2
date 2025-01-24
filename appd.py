@@ -157,7 +157,7 @@ if model:
                     "tipo_vehiculo": tipo_vehiculo,
                 }
 
-                if calcular_prediccion_mod or submit_update:
+                if calcular_prediccion_mod:
                     updated_df = pd.DataFrame([updated_data])
                     encoded_df = pd.get_dummies(updated_df, columns=["clima", "nivel_trafico", "momento_del_dia", "tipo_vehiculo"])
                     for col in model.feature_names:
@@ -193,4 +193,3 @@ if model:
                     st.dataframe(search_result)
                 else:
                     st.warning("No se encontró ningún pedido con ese ID.")
-
