@@ -23,20 +23,20 @@ modelo = cargar_modelo()
 
 # Función para leer registros desde Supabase
 def leer_registros():
-    data = supabase.table("registro_datos").select("*").execute()
+    data = supabase.table("nuevos_datos").select("*").execute()
     return pd.DataFrame(data.data)
 
 # Función para agregar un nuevo registro
 def agregar_registro(registro):
-    supabase.table("registro_datos").insert(registro).execute()
+    supabase.table("nuevos_datos").insert(registro).execute()
 
 # Función para actualizar un registro
 def actualizar_registro(id_pedido, valores_actualizados):
-    supabase.table("registro_datos").update(valores_actualizados).eq("ID_Pedido", id_pedido).execute()
+    supabase.table("nuevos_datos").update(valores_actualizados).eq("ID_Pedido", id_pedido).execute()
 
 # Función para eliminar un registro
 def eliminar_registro(id_pedido):
-    supabase.table("registro_datos").delete().eq("ID_Pedido", id_pedido).execute()
+    supabase.table("nuevos_datos").delete().eq("ID_Pedido", id_pedido).execute()
 
 # Opciones de listas desplegables
 clima_opciones = ["Despejado", "Lluvioso", "Nublado", "Ventoso"]
@@ -45,12 +45,12 @@ momento_dia_opciones = ["Mañana", "Tarde", "Noche"]
 tipo_vehiculo_opciones = ["Bicicleta", "Moto", "Coche", "Patineta"]
 
 # Aplicación Streamlit
-st.title("Gestión de Datos y Predicciones")
+st.title("Gestión de Pedidos y Predicciones")
 
 # Configuración de pestañas
-tabs = st.tabs(["Leer Registros", "Agregar Registro", "Actualizar Registro", "Eliminar Registro", "Predicción"])
+tabs = st.tabs(["Ver Pedidos", "Crear Pedido", "Modificar Pedido", "Eliminar Pedido"])
 
-# Pestaña: Leer Registros
+# Pestaña: Ver Pedidos
 with tabs[0]:
     st.subheader("Registros en Supabase")
     registros = leer_registros()
@@ -59,9 +59,9 @@ with tabs[0]:
     else:
         st.warning("No hay registros disponibles.")
 
-# Pestaña: Agregar Registro
+# Pestaña: Crear Pedido
 with tabs[1]:
-    st.subheader("Agregar un nuevo registro")
+    st.subheader("Crear un nuevo pedido")
     distancia = st.number_input("Distancia (km)", min_value=0.0)
     clima = st.selectbox("Clima", options=clima_opciones)
     nivel_trafico = st.selectbox("Nivel de Tráfico", options=nivel_trafico_opciones)
@@ -69,7 +69,8 @@ with tabs[1]:
     tipo_vehiculo = st.selectbox("Tipo de Vehículo", options=tipo_vehiculo_opciones)
     tiempo_preparacion = st.number_input("Tiempo de Preparación (min)", min_value=0)
     experiencia = st.number_input("Experiencia del Repartidor (años)", min_value=0.0)
-    if st.button("Agregar Registro"):
+
+    if st.button("Crear y Predecir Pedido"):
         nuevo_registro = {
             "Distancia_km": distancia,
             "Clima": clima_opciones.index(clima),
@@ -78,40 +79,45 @@ with tabs[1]:
             "Tipo_Vehiculo": tipo_vehiculo_opciones.index(tipo_vehiculo),
             "Tiempo_Preparacion_min": tiempo_preparacion,
             "Experiencia_Repartidor_anos": experiencia,
-            "Tiempo_Entrega_min": None,  # Se calculará con el modelo
         }
+        input_modelo = pd.DataFrame([nuevo_registro])
+        prediccion = modelo.predict(input_modelo)[0]
+        nuevo_registro["Tiempo_Entrega_min"] = int(prediccion)
         agregar_registro(nuevo_registro)
-        st.success("Registro agregado correctamente")
+        st.success(f"Pedido creado correctamente. Tiempo estimado de entrega: {prediccion:.2f} minutos.")
 
-# Pestaña: Actualizar Registro
+# Pestaña: Modificar Pedido
 with tabs[2]:
-    st.subheader("Actualizar un registro existente")
-    id_actualizar = st.number_input("ID del Pedido", min_value=0, step=1)
+    st.subheader("Modificar un pedido existente")
+    id_actualizar = st.number_input("ID del Pedido a modificar", min_value=0, step=1)
     distancia = st.number_input("Nueva Distancia (km)", min_value=0.0)
+    clima = st.selectbox("Nuevo Clima", options=clima_opciones)
+    nivel_trafico = st.selectbox("Nuevo Nivel de Tráfico", options=nivel_trafico_opciones)
+    momento_dia = st.selectbox("Nuevo Momento del Día", options=momento_dia_opciones)
+    tipo_vehiculo = st.selectbox("Nuevo Tipo de Vehículo", options=tipo_vehiculo_opciones)
     tiempo_preparacion = st.number_input("Nuevo Tiempo de Preparación (min)", min_value=0)
-    if st.button("Actualizar Registro"):
+    experiencia = st.number_input("Nueva Experiencia del Repartidor (años)", min_value=0.0)
+
+    if st.button("Actualizar y Predecir Pedido"):
         valores_actualizados = {
             "Distancia_km": distancia,
+            "Clima": clima_opciones.index(clima),
+            "Nivel_Trafico": nivel_trafico_opciones.index(nivel_trafico),
+            "Momento_Del_Dia": momento_dia_opciones.index(momento_dia),
+            "Tipo_Vehiculo": tipo_vehiculo_opciones.index(tipo_vehiculo),
             "Tiempo_Preparacion_min": tiempo_preparacion,
+            "Experiencia_Repartidor_anos": experiencia,
         }
+        input_modelo = pd.DataFrame([valores_actualizados])
+        prediccion = modelo.predict(input_modelo)[0]
+        valores_actualizados["Tiempo_Entrega_min"] = int(prediccion)
         actualizar_registro(id_actualizar, valores_actualizados)
-        st.success("Registro actualizado correctamente")
+        st.success(f"Pedido actualizado correctamente. Tiempo estimado de entrega: {prediccion:.2f} minutos.")
 
-# Pestaña: Eliminar Registro
+# Pestaña: Eliminar Pedido
 with tabs[3]:
-    st.subheader("Eliminar un registro existente")
+    st.subheader("Eliminar un pedido existente")
     id_eliminar = st.number_input("ID del Pedido para eliminar", min_value=0, step=1)
-    if st.button("Eliminar Registro"):
+    if st.button("Eliminar Pedido"):
         eliminar_registro(id_eliminar)
-        st.success("Registro eliminado correctamente")
-
-# Pestaña: Predicción
-with tabs[4]:
-    st.subheader("Realizar predicción para el último registro")
-    registros = leer_registros()
-    if not registros.empty:
-        ultimo_registro = registros.iloc[-1].drop("Tiempo_Entrega_min").values.reshape(1, -1)
-        prediccion = modelo.predict(ultimo_registro)
-        st.write(f"Predicción para el último registro: {prediccion[0]} minutos")
-    else:
-        st.warning("No hay registros disponibles para predicción.")
+        st.success("Pedido eliminado correctamente")
