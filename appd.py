@@ -28,24 +28,15 @@ def leer_registros():
 
 # Función para agregar un nuevo registro
 def agregar_registro(registro):
-    try:
-        supabase.table("nuevos_datos").insert(registro).execute()
-    except Exception as e:
-        st.error(f"Error al agregar el registro: {e}")
+    supabase.table("nuevos_datos").insert(registro).execute()
 
 # Función para actualizar un registro
 def actualizar_registro(id_pedido, valores_actualizados):
-    try:
-        supabase.table("nuevos_datos").update(valores_actualizados).eq("ID_Pedido", id_pedido).execute()
-    except Exception as e:
-        st.error(f"Error al actualizar el registro: {e}")
+    supabase.table("nuevos_datos").update(valores_actualizados).eq("ID_Pedido", id_pedido).execute()
 
 # Función para eliminar un registro
 def eliminar_registro(id_pedido):
-    try:
-        supabase.table("nuevos_datos").delete().eq("ID_Pedido", id_pedido).execute()
-    except Exception as e:
-        st.error(f"Error al eliminar el registro: {e}")
+    supabase.table("nuevos_datos").delete().eq("ID_Pedido", id_pedido).execute()
 
 # Opciones de listas desplegables
 clima_opciones = ["Despejado", "Lluvioso", "Nublado", "Ventoso"]
@@ -81,21 +72,17 @@ with tabs[1]:
 
     if st.button("Crear y Predecir Pedido"):
         nuevo_registro = {
-            "Distancia_km": float(distancia),
-            "Clima": int(clima_opciones.index(clima)),
-            "Nivel_Trafico": int(nivel_trafico_opciones.index(nivel_trafico)),
-            "Momento_Del_Dia": int(momento_dia_opciones.index(momento_dia)),
-            "Tipo_Vehiculo": int(tipo_vehiculo_opciones.index(tipo_vehiculo)),
-            "Tiempo_Preparacion_min": int(tiempo_preparacion),
-            "Experiencia_Repartidor_anos": float(experiencia),
+            "Distancia_km": distancia,
+            "Clima": clima_opciones.index(clima),
+            "Nivel_Trafico": nivel_trafico_opciones.index(nivel_trafico),
+            "Momento_Del_Dia": momento_dia_opciones.index(momento_dia),
+            "Tipo_Vehiculo": tipo_vehiculo_opciones.index(tipo_vehiculo),
+            "Tiempo_Preparacion_min": tiempo_preparacion,
+            "Experiencia_Repartidor_anos": experiencia,
         }
         input_modelo = pd.DataFrame([nuevo_registro])
         prediccion = modelo.predict(input_modelo)[0]
         nuevo_registro["Tiempo_Entrega_min"] = int(prediccion)
-
-        # Mostrar datos antes de insertar
-        st.write("Datos a insertar:", nuevo_registro)
-
         agregar_registro(nuevo_registro)
         st.success(f"Pedido creado correctamente. Tiempo estimado de entrega: {prediccion:.2f} minutos.")
 
@@ -113,21 +100,17 @@ with tabs[2]:
 
     if st.button("Actualizar y Predecir Pedido"):
         valores_actualizados = {
-            "Distancia_km": float(distancia),
-            "Clima": int(clima_opciones.index(clima)),
-            "Nivel_Trafico": int(nivel_trafico_opciones.index(nivel_trafico)),
-            "Momento_Del_Dia": int(momento_dia_opciones.index(momento_dia)),
-            "Tipo_Vehiculo": int(tipo_vehiculo_opciones.index(tipo_vehiculo)),
-            "Tiempo_Preparacion_min": int(tiempo_preparacion),
-            "Experiencia_Repartidor_anos": float(experiencia),
+            "Distancia_km": distancia,
+            "Clima": clima_opciones.index(clima),
+            "Nivel_Trafico": nivel_trafico_opciones.index(nivel_trafico),
+            "Momento_Del_Dia": momento_dia_opciones.index(momento_dia),
+            "Tipo_Vehiculo": tipo_vehiculo_opciones.index(tipo_vehiculo),
+            "Tiempo_Preparacion_min": tiempo_preparacion,
+            "Experiencia_Repartidor_anos": experiencia,
         }
         input_modelo = pd.DataFrame([valores_actualizados])
         prediccion = modelo.predict(input_modelo)[0]
         valores_actualizados["Tiempo_Entrega_min"] = int(prediccion)
-
-        # Mostrar datos antes de actualizar
-        st.write("Datos a actualizar:", valores_actualizados)
-
         actualizar_registro(id_actualizar, valores_actualizados)
         st.success(f"Pedido actualizado correctamente. Tiempo estimado de entrega: {prediccion:.2f} minutos.")
 
