@@ -7,8 +7,8 @@ from io import BytesIO
 from supabase import create_client, Client
 
 # Configuración de Supabase
-SUPABASE_URL = "https://aispdrqeugwxfhghzkcd.supabase.co"  # Cambia por tu URL de Supabase
-SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpc3BkcnFldWd3eGZoZ2h6a2NkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzM2NzkxMzgsImV4cCI6MjA0OTI1NTEzOH0.irvfK6Wdo_OMqU29Bhz941t6-y-Zg-YuIpqXNbM3COU"  # Cambia por tu clave de API
+SUPABASE_URL = "https://rtporjxjyrkttnvjtqmg.supabase.co"  # Cambia por tu URL de Supabase
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0cG9yanhqeXJrdHRudmp0cW1nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjY2OTEzNDAsImV4cCI6MjA0MjI2NzM0MH0.ghyQtdPB-db6_viDlJlQDLDL_h7tAukRWycVyfAE6zk"  # Cambia por tu clave de API
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # Función para cargar el modelo desde Supabase
