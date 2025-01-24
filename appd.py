@@ -1,15 +1,15 @@
-import streamlit as st
+import streamlit as st 
 import pandas as pd
 import requests
-import joblib
-import io
+import xgboost as xgb
+import json
 import numpy as np
 
 # Configuración de Supabase
 SUPABASE_URL = "https://aispdrqeugwxfhghzkcd.supabase.co"  # Cambia con tu URL de Supabase
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpc3BkcnFldWd3eGZoZ2h6a2NkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzM2NzkxMzgsImV4cCI6MjA0OTI1NTEzOH0.irvfK6Wdo_OMqU29Bhz941t6-y-Zg-YuIpqXNbM3COU"  # Cambia con tu clave API
-STORAGE_BUCKET = "modelorf"  # Nombre del bucket
-MODEL_FILENAME = "best_random_forest_model.pkl"  # Nombre del modelo en el bucket
+STORAGE_BUCKET = "modelos"  # Nombre del bucket
+MODEL_FILENAME = "xgboost_best_model.json"  # Nombre del modelo en el bucket
 
 headers = {
     "apikey": SUPABASE_KEY,
@@ -22,7 +22,9 @@ def load_model_from_supabase():
     url = f"{SUPABASE_URL}/storage/v1/object/public/{STORAGE_BUCKET}/{MODEL_FILENAME}"
     response = requests.get(url, headers=headers)
     if response.status_code == 200:
-        model = joblib.load(io.BytesIO(response.content))
+        model_json = response.content.decode('utf-8')
+        model = xgb.Booster()
+        model.load_model(json.loads(model_json))  # Carga el modelo desde el JSON
         return model
     else:
         st.error(f"No se pudo cargar el modelo desde Supabase. Error: {response.text}")
@@ -59,13 +61,28 @@ if submit:
     model = load_model_from_supabase()
 
     if model:
-        # Preprocesar el registro (modificar según las necesidades del modelo)
-        try:
-            # Ajustar si el modelo requiere procesamiento adicional (e.g., escalado, encoding)
-            record = np.array([[distancia_km, tiempo_preparacion_min, experiencia_repartidor_anos]])  # Ajustar si es necesario
+        # Crear el registro de características
+        feature_mapping = {
+            "Clima": {"Despejado": 0, "Lluvioso": 1, "Ventoso": 2, "Niebla": 3},
+            "Nivel de tráfico": {"Bajo": 0, "Medio": 1, "Alto": 2},
+            "Momento del día": {"Mañana": 0, "Tarde": 1, "Noche": 2, "Madrugada": 3},
+            "Tipo de vehículo": {"Bicicleta": 0, "Patineta": 1, "Moto": 2, "Auto": 3}
+        }
 
-            # Realizar la predicción
-            tiempo_predicho = model.predict(record)[0]
+        try:
+            # Preprocesar los datos
+            record = np.array([[
+                distancia_km,
+                tiempo_preparacion_min,
+                experiencia_repartidor_anos,
+                feature_mapping["Clima"][clima],
+                feature_mapping["Nivel de tráfico"][nivel_trafico],
+                feature_mapping["Momento del día"][momento_del_dia],
+                feature_mapping["Tipo de vehículo"][tipo_vehiculo]
+            ]])
+
+            dmatrix = xgb.DMatrix(record)
+            tiempo_predicho = model.predict(dmatrix)[0]
 
             # Mostrar el resultado
             st.write(f"**Tiempo estimado de entrega:** {tiempo_predicho:.2f} minutos")
