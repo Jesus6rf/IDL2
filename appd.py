@@ -7,8 +7,8 @@ from io import BytesIO
 from supabase import create_client, Client
 
 # Configuración de Supabase
-SUPABASE_URL = "https://aispdrqeugwxfhghzkcd.supabase.co"  # Cambia por tu URL de Supabase
-SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpc3BkcnFldWd3eGZoZ2h6a2NkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzM2NzkxMzgsImV4cCI6MjA0OTI1NTEzOH0.irvfK6Wdo_OMqU29Bhz941t6-y-Zg-YuIpqXNbM3COU"  # Cambia por tu clave de API
+SUPABASE_URL = "https://<tu-supabase-url>"  # Cambia por tu URL de Supabase
+SUPABASE_KEY = "<tu-supabase-key>"  # Cambia por tu clave de API
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # Función para cargar el modelo desde Supabase
@@ -38,32 +38,44 @@ def actualizar_registro(id_pedido, valores_actualizados):
 def eliminar_registro(id_pedido):
     supabase.table("Registro_Datos").delete().eq("ID_Pedido", id_pedido).execute()
 
+# Opciones de listas desplegables
+clima_opciones = ["Despejado", "Lluvioso", "Nublado", "Ventoso"]
+nivel_trafico_opciones = ["Bajo", "Medio", "Alto"]
+momento_dia_opciones = ["Mañana", "Tarde", "Noche"]
+tipo_vehiculo_opciones = ["Bicicleta", "Moto", "Coche", "Patineta"]
+
 # Aplicación Streamlit
 st.title("Gestión de Datos y Predicciones")
 
-# Opción para ver todos los registros
-if st.sidebar.button("Leer Registros"):
-    registros = leer_registros()
-    st.subheader("Registros en Supabase")
-    st.dataframe(registros)
+# Configuración de pestañas
+tabs = st.tabs(["Leer Registros", "Agregar Registro", "Actualizar Registro", "Eliminar Registro", "Predicción"])
 
-# Opción para agregar un nuevo registro
-st.sidebar.subheader("Agregar Registro")
-if st.sidebar.button("Nuevo Registro"):
-    distancia = st.sidebar.number_input("Distancia (km)", min_value=0.0)
-    clima = st.sidebar.number_input("Clima (codificado)", min_value=0)
-    nivel_trafico = st.sidebar.number_input("Nivel de Tráfico (codificado)", min_value=0)
-    momento_dia = st.sidebar.number_input("Momento del Día (codificado)", min_value=0)
-    tipo_vehiculo = st.sidebar.number_input("Tipo de Vehículo (codificado)", min_value=0)
-    tiempo_preparacion = st.sidebar.number_input("Tiempo de Preparación (min)", min_value=0)
-    experiencia = st.sidebar.number_input("Experiencia del Repartidor (años)", min_value=0.0)
-    if st.sidebar.button("Agregar"):
+# Pestaña: Leer Registros
+with tabs[0]:
+    st.subheader("Registros en Supabase")
+    registros = leer_registros()
+    if not registros.empty:
+        st.dataframe(registros)
+    else:
+        st.warning("No hay registros disponibles.")
+
+# Pestaña: Agregar Registro
+with tabs[1]:
+    st.subheader("Agregar un nuevo registro")
+    distancia = st.number_input("Distancia (km)", min_value=0.0)
+    clima = st.selectbox("Clima", options=clima_opciones)
+    nivel_trafico = st.selectbox("Nivel de Tráfico", options=nivel_trafico_opciones)
+    momento_dia = st.selectbox("Momento del Día", options=momento_dia_opciones)
+    tipo_vehiculo = st.selectbox("Tipo de Vehículo", options=tipo_vehiculo_opciones)
+    tiempo_preparacion = st.number_input("Tiempo de Preparación (min)", min_value=0)
+    experiencia = st.number_input("Experiencia del Repartidor (años)", min_value=0.0)
+    if st.button("Agregar Registro"):
         nuevo_registro = {
             "Distancia_km": distancia,
-            "Clima": clima,
-            "Nivel_Trafico": nivel_trafico,
-            "Momento_Del_Dia": momento_dia,
-            "Tipo_Vehiculo": tipo_vehiculo,
+            "Clima": clima_opciones.index(clima),
+            "Nivel_Trafico": nivel_trafico_opciones.index(nivel_trafico),
+            "Momento_Del_Dia": momento_dia_opciones.index(momento_dia),
+            "Tipo_Vehiculo": tipo_vehiculo_opciones.index(tipo_vehiculo),
             "Tiempo_Preparacion_min": tiempo_preparacion,
             "Experiencia_Repartidor_anos": experiencia,
             "Tiempo_Entrega_min": None,  # Se calculará con el modelo
@@ -71,27 +83,31 @@ if st.sidebar.button("Nuevo Registro"):
         agregar_registro(nuevo_registro)
         st.success("Registro agregado correctamente")
 
-# Opción para actualizar un registro existente
-st.sidebar.subheader("Actualizar Registro")
-id_actualizar = st.sidebar.number_input("ID del Pedido", min_value=0)
-if st.sidebar.button("Actualizar"):
-    valores_actualizados = {
-        "Distancia_km": st.sidebar.number_input("Nueva Distancia (km)", min_value=0.0),
-        "Tiempo_Preparacion_min": st.sidebar.number_input("Nuevo Tiempo de Preparación (min)", min_value=0),
-    }
-    actualizar_registro(id_actualizar, valores_actualizados)
-    st.success("Registro actualizado correctamente")
+# Pestaña: Actualizar Registro
+with tabs[2]:
+    st.subheader("Actualizar un registro existente")
+    id_actualizar = st.number_input("ID del Pedido", min_value=0, step=1)
+    distancia = st.number_input("Nueva Distancia (km)", min_value=0.0)
+    tiempo_preparacion = st.number_input("Nuevo Tiempo de Preparación (min)", min_value=0)
+    if st.button("Actualizar Registro"):
+        valores_actualizados = {
+            "Distancia_km": distancia,
+            "Tiempo_Preparacion_min": tiempo_preparacion,
+        }
+        actualizar_registro(id_actualizar, valores_actualizados)
+        st.success("Registro actualizado correctamente")
 
-# Opción para eliminar un registro
-st.sidebar.subheader("Eliminar Registro")
-id_eliminar = st.sidebar.number_input("ID del Pedido para eliminar", min_value=0)
-if st.sidebar.button("Eliminar"):
-    eliminar_registro(id_eliminar)
-    st.success("Registro eliminado correctamente")
+# Pestaña: Eliminar Registro
+with tabs[3]:
+    st.subheader("Eliminar un registro existente")
+    id_eliminar = st.number_input("ID del Pedido para eliminar", min_value=0, step=1)
+    if st.button("Eliminar Registro"):
+        eliminar_registro(id_eliminar)
+        st.success("Registro eliminado correctamente")
 
-# Opción para realizar una predicción
-st.sidebar.subheader("Predicción")
-if st.sidebar.button("Realizar Predicción"):
+# Pestaña: Predicción
+with tabs[4]:
+    st.subheader("Realizar predicción para el último registro")
     registros = leer_registros()
     if not registros.empty:
         ultimo_registro = registros.iloc[-1].drop("Tiempo_Entrega_min").values.reshape(1, -1)
