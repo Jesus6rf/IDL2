@@ -7,8 +7,8 @@ from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.preprocessing import OneHotEncoder
 import matplotlib.pyplot as plt
 
-# Configuración de Supabase (usa tu URL y API Key)
-SUPABASE_URL = "https://rtporjxjyrkttnvjtqmg.supabase.co"  # Reemplaza con tu URL
+# Configuración de Supabase
+SUPABASE_URL = "https://rtporjxjyrkttnvjtqmg.supabase.co"  # Reemplaza con tu URL de Supabase
 SUPABASE_API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0cG9yanhqeXJrdHRudmp0cW1nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjY2OTEzNDAsImV4cCI6MjA0MjI2NzM0MH0.ghyQtdPB-db6_viDlJlQDLDL_h7tAukRWycVyfAE6zk"  # Reemplaza con tu API Key
 
 # Función para cargar datos desde Supabase
@@ -72,7 +72,7 @@ def plot_results(y_test, y_pred):
     st.pyplot(plt)
 
 # Interfaz de Streamlit
-st.title("Predicción del Tiempo de Entrega")
+st.title("Visualización y Predicción de Datos de Entrega")
 st.write("Cargando datos desde Supabase...")
 
 # Cargar y mostrar datos
