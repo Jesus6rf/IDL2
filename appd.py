@@ -1,14 +1,12 @@
 import streamlit as st
 import pandas as pd
-import requests
-import json
 import pickle
 from io import BytesIO
 from supabase import create_client, Client
 
 # Configuración de Supabase
 SUPABASE_URL = "https://rtporjxjyrkttnvjtqmg.supabase.co"
-SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0cG9yanhqeXJrdHRudmp0cW1nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjY2OTEzNDAsImV4cCI6MjA0MjI2NzM0MH0.ghyQtdPB-db6_viDlJlQDLDL_h7tAukRWycVyfAE6zk"
+SUPABASE_KEY = "tu_clave_secreta"
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # Función para cargar el modelo desde Supabase
@@ -108,13 +106,39 @@ with tabs[2]:
         id_pedido = st.selectbox("Selecciona el ID del Pedido", registros["ID_Pedido"])
         pedido_seleccionado = registros[registros["ID_Pedido"] == id_pedido].iloc[0]
 
-        distancia = st.number_input("Distancia (km)", min_value=0.0, value=pedido_seleccionado["Distancia_km"])
-        clima = st.selectbox("Clima", options=clima_opciones, index=pedido_seleccionado["Clima"])
-        nivel_trafico = st.selectbox("Nivel de Tráfico", options=nivel_trafico_opciones, index=pedido_seleccionado["Nivel_Trafico"])
-        momento_dia = st.selectbox("Momento del Día", options=momento_dia_opciones, index=pedido_seleccionado["Momento_Del_Dia"])
-        tipo_vehiculo = st.selectbox("Tipo de Vehículo", options=tipo_vehiculo_opciones, index=pedido_seleccionado["Tipo_Vehiculo"])
-        tiempo_preparacion = st.number_input("Tiempo de Preparación (min)", min_value=0, value=pedido_seleccionado["Tiempo_Preparacion_min"])
-        experiencia = st.number_input("Experiencia del Repartidor (años)", min_value=0.0, value=pedido_seleccionado["Experiencia_Repartidor_anos"])
+        distancia = st.number_input(
+            "Distancia (km)",
+            min_value=0.0,
+            value=float(pedido_seleccionado["Distancia_km"]),
+        )
+        clima = st.selectbox(
+            "Clima", options=clima_opciones, index=pedido_seleccionado["Clima"]
+        )
+        nivel_trafico = st.selectbox(
+            "Nivel de Tráfico",
+            options=nivel_trafico_opciones,
+            index=pedido_seleccionado["Nivel_Trafico"],
+        )
+        momento_dia = st.selectbox(
+            "Momento del Día",
+            options=momento_dia_opciones,
+            index=pedido_seleccionado["Momento_Del_Dia"],
+        )
+        tipo_vehiculo = st.selectbox(
+            "Tipo de Vehículo",
+            options=tipo_vehiculo_opciones,
+            index=pedido_seleccionado["Tipo_Vehiculo"],
+        )
+        tiempo_preparacion = st.number_input(
+            "Tiempo de Preparación (min)",
+            min_value=0,
+            value=int(pedido_seleccionado["Tiempo_Preparacion_min"]),
+        )
+        experiencia = st.number_input(
+            "Experiencia del Repartidor (años)",
+            min_value=0.0,
+            value=float(pedido_seleccionado["Experiencia_Repartidor_anos"]),
+        )
 
         if st.button("Actualizar y Predecir Pedido"):
             valores_actualizados = {
@@ -131,7 +155,9 @@ with tabs[2]:
             valores_actualizados["Tiempo_Entrega_min"] = int(prediccion)
 
             actualizar_registro(id_pedido, valores_actualizados)
-            st.success(f"Pedido actualizado correctamente. Tiempo estimado de entrega: {prediccion:.2f} minutos.")
+            st.success(
+                f"Pedido actualizado correctamente. Tiempo estimado de entrega: {prediccion:.2f} minutos."
+            )
     else:
         st.warning("No hay registros disponibles para modificar.")
 
@@ -140,7 +166,9 @@ with tabs[3]:
     st.subheader("Eliminar un pedido existente")
     registros = leer_registros()
     if not registros.empty:
-        id_eliminar = st.selectbox("Selecciona el ID del Pedido para eliminar", registros["ID_Pedido"])
+        id_eliminar = st.selectbox(
+            "Selecciona el ID del Pedido para eliminar", registros["ID_Pedido"]
+        )
         if st.button("Eliminar Pedido"):
             eliminar_registro(id_eliminar)
             st.success("Pedido eliminado correctamente")
