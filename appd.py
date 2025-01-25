@@ -3,21 +3,36 @@ import pandas as pd
 import pickle
 from io import BytesIO
 from supabase import create_client, Client
+from dotenv import load_dotenv
+import os
 
-# Configuración de Supabase
-SUPABASE_URL = "https://rtporjxjyrkttnvjtqmg.supabase.co"
-SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0cG9yanhqeXJrdHRudmp0cW1nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjY2OTEzNDAsImV4cCI6MjA0MjI2NzM0MH0.ghyQtdPB-db6_viDlJlQDLDL_h7tAukRWycVyfAE6zk"
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+# Cargar claves desde el archivo .env
+load_dotenv()
+SUPABASE_URL = os.getenv("https://rtporjxjyrkttnvjtqmg.supabase.co")
+SUPABASE_KEY = os.getenv("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0cG9yanhqeXJrdHRudmp0cW1nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjY2OTEzNDAsImV4cCI6MjA0MjI2NzM0MH0.ghyQtdPB-db6_viDlJlQDLDL_h7tAukRWycVyfAE6zk")
+
+# Crear cliente de Supabase
+try:
+    supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+except Exception as e:
+    st.error("Error al conectar con Supabase. Verifica las claves y la URL.")
+    st.stop()
 
 # Función para cargar el modelo desde Supabase
 @st.cache_resource
 def cargar_modelo():
-    response = supabase.storage.from_("modelos").download("random_forest_model.pkl")
-    model_data = BytesIO(response)
-    return pickle.load(model_data)
+    try:
+        response = supabase.storage.from_("modelos").download("random_forest_model.pkl")
+        model_data = BytesIO(response)
+        return pickle.load(model_data)
+    except Exception as e:
+        st.error(f"Error al cargar el modelo: {e}")
+        return None
 
 # Cargar el modelo al iniciar
 modelo = cargar_modelo()
+if modelo is None:
+    st.stop()
 
 # Función para leer registros desde Supabase
 def leer_registros():
@@ -111,24 +126,20 @@ with tabs[2]:
             min_value=0.0,
             value=float(pedido_seleccionado["Distancia_km"]),
         )
-        clima = st.selectbox(
-            "Clima", options=clima_opciones, index=pedido_seleccionado["Clima"]
-        )
-        nivel_trafico = st.selectbox(
-            "Nivel de Tráfico",
-            options=nivel_trafico_opciones,
-            index=pedido_seleccionado["Nivel_Trafico"],
-        )
-        momento_dia = st.selectbox(
-            "Momento del Día",
-            options=momento_dia_opciones,
-            index=pedido_seleccionado["Momento_Del_Dia"],
-        )
-        tipo_vehiculo = st.selectbox(
-            "Tipo de Vehículo",
-            options=tipo_vehiculo_opciones,
-            index=pedido_seleccionado["Tipo_Vehiculo"],
-        )
+
+        # Validar índices dinámicos
+        clima_index = pedido_seleccionado.get("Clima", 0)
+        clima = st.selectbox("Clima", options=clima_opciones, index=clima_index if clima_index < len(clima_opciones) else 0)
+
+        nivel_trafico_index = pedido_seleccionado.get("Nivel_Trafico", 0)
+        nivel_trafico = st.selectbox("Nivel de Tráfico", options=nivel_trafico_opciones, index=nivel_trafico_index if nivel_trafico_index < len(nivel_trafico_opciones) else 0)
+
+        momento_dia_index = pedido_seleccionado.get("Momento_Del_Dia", 0)
+        momento_dia = st.selectbox("Momento del Día", options=momento_dia_opciones, index=momento_dia_index if momento_dia_index < len(momento_dia_opciones) else 0)
+
+        tipo_vehiculo_index = pedido_seleccionado.get("Tipo_Vehiculo", 0)
+        tipo_vehiculo = st.selectbox("Tipo de Vehículo", options=tipo_vehiculo_opciones, index=tipo_vehiculo_index if tipo_vehiculo_index < len(tipo_vehiculo_opciones) else 0)
+
         tiempo_preparacion = st.number_input(
             "Tiempo de Preparación (min)",
             min_value=0,
@@ -166,9 +177,7 @@ with tabs[3]:
     st.subheader("Eliminar un pedido existente")
     registros = leer_registros()
     if not registros.empty:
-        id_eliminar = st.selectbox(
-            "Selecciona el ID del Pedido para eliminar", registros["ID_Pedido"]
-        )
+        id_eliminar = st.selectbox("Selecciona el ID del Pedido para eliminar", registros["ID_Pedido"])
         if st.button("Eliminar Pedido"):
             eliminar_registro(id_eliminar)
             st.success("Pedido eliminado correctamente")
