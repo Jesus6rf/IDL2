@@ -107,14 +107,27 @@ with tabs[2]:
         pedido_seleccionado = registros[registros["ID_Pedido"] == id_pedido].iloc[0]
 
         distancia = st.number_input("Distancia (km)", min_value=0.0, value=float(pedido_seleccionado["Distancia_km"]))
+
+        # Validar índice de "Clima"
         clima_index = pedido_seleccionado.get("Clima", 0)
-        clima = st.selectbox("Clima", options=clima_opciones, index=clima_index if clima_index < len(clima_opciones) else 0)
+        clima_index = clima_index if isinstance(clima_index, int) and 0 <= clima_index < len(clima_opciones) else 0
+        clima = st.selectbox("Clima", options=clima_opciones, index=clima_index)
+
+        # Validar índice de "Nivel de Tráfico"
         nivel_trafico_index = pedido_seleccionado.get("Nivel_Trafico", 0)
-        nivel_trafico = st.selectbox("Nivel de Tráfico", options=nivel_trafico_opciones, index=nivel_trafico_index if nivel_trafico_index < len(nivel_trafico_opciones) else 0)
+        nivel_trafico_index = nivel_trafico_index if isinstance(nivel_trafico_index, int) and 0 <= nivel_trafico_index < len(nivel_trafico_opciones) else 0
+        nivel_trafico = st.selectbox("Nivel de Tráfico", options=nivel_trafico_opciones, index=nivel_trafico_index)
+
+        # Validar índice de "Momento del Día"
         momento_dia_index = pedido_seleccionado.get("Momento_Del_Dia", 0)
-        momento_dia = st.selectbox("Momento del Día", options=momento_dia_opciones, index=momento_dia_index if momento_dia_index < len(momento_dia_opciones) else 0)
+        momento_dia_index = momento_dia_index if isinstance(momento_dia_index, int) and 0 <= momento_dia_index < len(momento_dia_opciones) else 0
+        momento_dia = st.selectbox("Momento del Día", options=momento_dia_opciones, index=momento_dia_index)
+
+        # Validar índice de "Tipo de Vehículo"
         tipo_vehiculo_index = pedido_seleccionado.get("Tipo_Vehiculo", 0)
-        tipo_vehiculo = st.selectbox("Tipo de Vehículo", options=tipo_vehiculo_opciones, index=tipo_vehiculo_index if tipo_vehiculo_index < len(tipo_vehiculo_opciones) else 0)
+        tipo_vehiculo_index = tipo_vehiculo_index if isinstance(tipo_vehiculo_index, int) and 0 <= tipo_vehiculo_index < len(tipo_vehiculo_opciones) else 0
+        tipo_vehiculo = st.selectbox("Tipo de Vehículo", options=tipo_vehiculo_opciones, index=tipo_vehiculo_index)
+
         tiempo_preparacion = st.number_input("Tiempo de Preparación (min)", min_value=0, value=int(pedido_seleccionado["Tiempo_Preparacion_min"]))
         experiencia = st.number_input("Experiencia del Repartidor (años)", min_value=0.0, value=float(pedido_seleccionado["Experiencia_Repartidor_anos"]))
 
