@@ -7,8 +7,8 @@ from io import BytesIO
 from supabase import create_client, Client
 
 # Configuración de Supabase
-SUPABASE_URL = "https://aispdrqeugwxfhghzkcd.supabase.co"  # Cambia por tu URL de Supabase
-SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpc3BkcnFldWd3eGZoZ2h6a2NkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzM2NzkxMzgsImV4cCI6MjA0OTI1NTEzOH0.irvfK6Wdo_OMqU29Bhz941t6-y-Zg-YuIpqXNbM3COU"  # Cambia por tu clave de API
+SUPABASE_URL = "https://rtporjxjyrkttnvjtqmg.supabase.co"  # Cambia por tu URL de Supabase
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0cG9yanhqeXJrdHRudmp0cW1nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjY2OTEzNDAsImV4cCI6MjA0MjI2NzM0MH0.ghyQtdPB-db6_viDlJlQDLDL_h7tAukRWycVyfAE6zk"  # Cambia por tu clave de API
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # Función para cargar el modelo desde Supabase
@@ -23,20 +23,36 @@ modelo = cargar_modelo()
 
 # Función para leer registros desde Supabase
 def leer_registros():
-    data = supabase.table("nuevos_datos").select("*").execute()
-    return pd.DataFrame(data.data)
+    try:
+        data = supabase.table("nuevos_datos").select("*").execute()
+        return pd.DataFrame(data.data)
+    except Exception as e:
+        st.error(f"Error al leer registros: {e}")
+        return pd.DataFrame()
 
 # Función para agregar un nuevo registro
 def agregar_registro(registro):
-    supabase.table("nuevos_datos").insert(registro).execute()
+    try:
+        response = supabase.table("nuevos_datos").insert(registro).execute()
+        st.write("Respuesta de Supabase:", response)
+    except Exception as e:
+        st.error(f"Error al agregar el registro: {e}")
 
 # Función para actualizar un registro
 def actualizar_registro(id_pedido, valores_actualizados):
-    supabase.table("nuevos_datos").update(valores_actualizados).eq("ID_Pedido", id_pedido).execute()
+    try:
+        response = supabase.table("nuevos_datos").update(valores_actualizados).eq("ID_Pedido", id_pedido).execute()
+        st.write("Respuesta de Supabase al actualizar:", response)
+    except Exception as e:
+        st.error(f"Error al actualizar el registro: {e}")
 
 # Función para eliminar un registro
 def eliminar_registro(id_pedido):
-    supabase.table("nuevos_datos").delete().eq("ID_Pedido", id_pedido).execute()
+    try:
+        response = supabase.table("nuevos_datos").delete().eq("ID_Pedido", id_pedido).execute()
+        st.write("Respuesta de Supabase al eliminar:", response)
+    except Exception as e:
+        st.error(f"Error al eliminar el registro: {e}")
 
 # Opciones de listas desplegables
 clima_opciones = ["Despejado", "Lluvioso", "Nublado", "Ventoso"]
@@ -72,17 +88,21 @@ with tabs[1]:
 
     if st.button("Crear y Predecir Pedido"):
         nuevo_registro = {
-            "Distancia_km": distancia,
-            "Clima": clima_opciones.index(clima),
-            "Nivel_Trafico": nivel_trafico_opciones.index(nivel_trafico),
-            "Momento_Del_Dia": momento_dia_opciones.index(momento_dia),
-            "Tipo_Vehiculo": tipo_vehiculo_opciones.index(tipo_vehiculo),
-            "Tiempo_Preparacion_min": tiempo_preparacion,
-            "Experiencia_Repartidor_anos": experiencia,
+            "Distancia_km": float(distancia),
+            "Clima": int(clima_opciones.index(clima)),
+            "Nivel_Trafico": int(nivel_trafico_opciones.index(nivel_trafico)),
+            "Momento_Del_Dia": int(momento_dia_opciones.index(momento_dia)),
+            "Tipo_Vehiculo": int(tipo_vehiculo_opciones.index(tipo_vehiculo)),
+            "Tiempo_Preparacion_min": int(tiempo_preparacion),
+            "Experiencia_Repartidor_anos": float(experiencia),
         }
         input_modelo = pd.DataFrame([nuevo_registro])
         prediccion = modelo.predict(input_modelo)[0]
         nuevo_registro["Tiempo_Entrega_min"] = int(prediccion)
+
+        # Mostrar datos antes de insertar
+        st.write("Datos a insertar (debug):", nuevo_registro)
+
         agregar_registro(nuevo_registro)
         st.success(f"Pedido creado correctamente. Tiempo estimado de entrega: {prediccion:.2f} minutos.")
 
@@ -100,17 +120,21 @@ with tabs[2]:
 
     if st.button("Actualizar y Predecir Pedido"):
         valores_actualizados = {
-            "Distancia_km": distancia,
-            "Clima": clima_opciones.index(clima),
-            "Nivel_Trafico": nivel_trafico_opciones.index(nivel_trafico),
-            "Momento_Del_Dia": momento_dia_opciones.index(momento_dia),
-            "Tipo_Vehiculo": tipo_vehiculo_opciones.index(tipo_vehiculo),
-            "Tiempo_Preparacion_min": tiempo_preparacion,
-            "Experiencia_Repartidor_anos": experiencia,
+            "Distancia_km": float(distancia),
+            "Clima": int(clima_opciones.index(clima)),
+            "Nivel_Trafico": int(nivel_trafico_opciones.index(nivel_trafico)),
+            "Momento_Del_Dia": int(momento_dia_opciones.index(momento_dia)),
+            "Tipo_Vehiculo": int(tipo_vehiculo_opciones.index(tipo_vehiculo)),
+            "Tiempo_Preparacion_min": int(tiempo_preparacion),
+            "Experiencia_Repartidor_anos": float(experiencia),
         }
         input_modelo = pd.DataFrame([valores_actualizados])
         prediccion = modelo.predict(input_modelo)[0]
         valores_actualizados["Tiempo_Entrega_min"] = int(prediccion)
+
+        # Mostrar datos antes de actualizar
+        st.write("Datos a actualizar (debug):", valores_actualizados)
+
         actualizar_registro(id_actualizar, valores_actualizados)
         st.success(f"Pedido actualizado correctamente. Tiempo estimado de entrega: {prediccion:.2f} minutos.")
 
