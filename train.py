@@ -17,7 +17,7 @@ def load_data():
         "apikey": SUPABASE_API_KEY,
         "Authorization": f"Bearer {SUPABASE_API_KEY}",
     }
-    response = requests.get(f"{SUPABASE_URL}/rest/v1/pedidodato_crudos", headers=headers, params={"select": "*"})
+    response = requests.get(f"{SUPABASE_URL}/rest/v1/datos_crudos", headers=headers, params={"select": "*"})
     
     if response.status_code == 200:
         data = pd.DataFrame(response.json())
