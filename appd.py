@@ -120,11 +120,17 @@ with tabs[2]:
         id_pedido = st.selectbox("Selecciona el ID del Pedido", registros["ID_Pedido"], key="modificar_id")
         pedido_seleccionado = registros[registros["ID_Pedido"] == id_pedido].iloc[0]
 
+        # Conversión de texto a índice
+        clima_index = clima_opciones.index(pedido_seleccionado["Clima"]) if pedido_seleccionado["Clima"] in clima_opciones else 0
+        nivel_trafico_index = nivel_trafico_opciones.index(pedido_seleccionado["Nivel_Trafico"]) if pedido_seleccionado["Nivel_Trafico"] in nivel_trafico_opciones else 0
+        momento_dia_index = momento_dia_opciones.index(pedido_seleccionado["Momento_Del_Dia"]) if pedido_seleccionado["Momento_Del_Dia"] in momento_dia_opciones else 0
+        tipo_vehiculo_index = tipo_vehiculo_opciones.index(pedido_seleccionado["Tipo_Vehiculo"]) if pedido_seleccionado["Tipo_Vehiculo"] in tipo_vehiculo_opciones else 0
+
         distancia = st.number_input("Distancia (km)", min_value=0.0, value=float(pedido_seleccionado["Distancia_km"]), key="modificar_distancia")
-        clima = st.selectbox("Clima del Pedido", options=clima_opciones, index=clima_opciones.index(pedido_seleccionado["Clima"]), key="modificar_clima")
-        nivel_trafico = st.selectbox("Nivel de Tráfico del Pedido", options=nivel_trafico_opciones, index=nivel_trafico_opciones.index(pedido_seleccionado["Nivel_Trafico"]), key="modificar_trafico")
-        momento_dia = st.selectbox("Momento del Día del Pedido", options=momento_dia_opciones, index=momento_dia_opciones.index(pedido_seleccionado["Momento_Del_Dia"]), key="modificar_momento")
-        tipo_vehiculo = st.selectbox("Tipo de Vehículo del Pedido", options=tipo_vehiculo_opciones, index=tipo_vehiculo_opciones.index(pedido_seleccionado["Tipo_Vehiculo"]), key="modificar_vehiculo")
+        clima = st.selectbox("Clima del Pedido", options=clima_opciones, index=clima_index, key="modificar_clima")
+        nivel_trafico = st.selectbox("Nivel de Tráfico del Pedido", options=nivel_trafico_opciones, index=nivel_trafico_index, key="modificar_trafico")
+        momento_dia = st.selectbox("Momento del Día del Pedido", options=momento_dia_opciones, index=momento_dia_index, key="modificar_momento")
+        tipo_vehiculo = st.selectbox("Tipo de Vehículo del Pedido", options=tipo_vehiculo_opciones, index=tipo_vehiculo_index, key="modificar_vehiculo")
         tiempo_preparacion = st.number_input("Tiempo de Preparación (min)", min_value=0, value=int(pedido_seleccionado["Tiempo_Preparacion_min"]), key="modificar_tiempo")
         experiencia = st.number_input("Experiencia del Repartidor (años)", min_value=0.0, value=float(pedido_seleccionado["Experiencia_Repartidor_anos"]), key="modificar_experiencia")
 
