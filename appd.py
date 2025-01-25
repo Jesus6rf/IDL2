@@ -6,7 +6,7 @@ from supabase import create_client, Client
 
 # Configuración de Supabase
 SUPABASE_URL = "https://rtporjxjyrkttnvjtqmg.supabase.co"
-SUPABASE_KEY = "tu_clave_secreta"
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0cG9yanhqeXJrdHRudmp0cW1nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjY2OTEzNDAsImV4cCI6MjA0MjI2NzM0MH0.ghyQtdPB-db6_viDlJlQDLDL_h7tAukRWycVyfAE6zk"
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # Función para cargar el modelo desde Supabase
