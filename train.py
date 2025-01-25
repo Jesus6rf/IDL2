@@ -1,28 +1,15 @@
 import streamlit as st
 import pandas as pd
 import requests
-import pickle
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error, r2_score
+import pickle
 
 # Configuración de Supabase
-SUPABASE_URL = "https://rtporjxjyrkttnvjtqmg.supabase.co"  # Reemplaza con tu URL de Supabase
-SUPABASE_API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0cG9yanhqeXJrdHRudmp0cW1nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjY2OTEzNDAsImV4cCI6MjA0MjI2NzM0MH0.ghyQtdPB-db6_viDlJlQDLDL_h7tAukRWycVyfAE6zk"  # Reemplaza con tu API Key
-TABLE_NAME = "datos_crudos"  # Nombre de tu tabla en Supabase
-
-# Valores predeterminados para imputación de datos
-DEFAULT_VALUES = {
-    "ID_Pedido": 0,
-    "Distancia_km": 0.0,
-    "Clima": "Desconocido",
-    "Nivel_Trafico": "Desconocido",
-    "Momento_Del_Dia": "Desconocido",
-    "Tipo_Vehiculo": "Desconocido",
-    "Tiempo_Preparacion_min": 0,
-    "Experiencia_Repartidor_anos": 0,
-    "Tiempo_Entrega_min": 0
-}
+SUPABASE_URL = "https://rtporjxjyrkttnvjtqmg.supabase.co"  # URL de Supabase
+SUPABASE_API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0cG9yanhqeXJrdHRudmp0cW1nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjY2OTEzNDAsImV4cCI6MjA0MjI2NzM0MH0.ghyQtdPB-db6_viDlJlQDLDL_h7tAukRWycVyfAE6zk"  # API Key
+TABLE_NAME = "datos_crudos"  # Nombre de la tabla en Supabase
 
 # Función para cargar datos desde Supabase
 def load_data_from_supabase():
@@ -36,10 +23,6 @@ def load_data_from_supabase():
     else:
         st.error(f"Error al cargar datos: {response.status_code} - {response.text}")
         return pd.DataFrame()
-
-# Limpieza e imputación de datos
-def clean_data(dataframe):
-    return dataframe.fillna(DEFAULT_VALUES)
 
 # Entrenamiento del modelo
 def train_model(dataframe):
@@ -60,7 +43,7 @@ def train_model(dataframe):
     mse = mean_squared_error(y_test, y_pred)
     r2 = r2_score(y_test, y_pred)
     
-    return model, mse, r2
+    return model, mse, r2, X_test, y_test, y_pred
 
 # Guardar el modelo como archivo .pkl
 def save_model(model):
@@ -70,9 +53,9 @@ def save_model(model):
         st.download_button("Descargar Modelo", f, file_name="modelo_entrenado.pkl")
 
 # Interfaz de Streamlit
-st.title("Entrenamiento del Modelo con Datos de Supabase")
+st.title("Entrenamiento del Modelo con Datos desde Supabase")
 
-# Cargar datos desde Supabase
+# Botón para cargar datos desde Supabase
 if st.button("Cargar datos desde Supabase"):
     data = load_data_from_supabase()
     if not data.empty:
@@ -80,17 +63,18 @@ if st.button("Cargar datos desde Supabase"):
         st.write("Datos crudos cargados:")
         st.dataframe(data)
 
-        # Limpieza e imputación de datos
-        cleaned_data = clean_data(data)
-        st.write("Datos después de la limpieza e imputación:")
-        st.dataframe(cleaned_data)
-
         # Entrenar modelo
+        st.subheader("Entrenamiento del Modelo")
         if st.button("Entrenar Modelo"):
-            model, mse, r2 = train_model(cleaned_data)
+            model, mse, r2, X_test, y_test, y_pred = train_model(data)
             st.write("Modelo entrenado exitosamente.")
             st.write(f"**Error cuadrático medio (MSE):** {mse:.2f}")
             st.write(f"**Coeficiente de determinación (R²):** {r2:.2f}")
+
+            # Mostrar una comparación de valores reales vs predichos
+            st.write("Comparación entre valores reales y predichos:")
+            comparison = pd.DataFrame({"Real": y_test, "Predicho": y_pred}).reset_index(drop=True)
+            st.write(comparison.head())
 
             # Descargar modelo
             save_model(model)
