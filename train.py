@@ -4,6 +4,7 @@ import requests
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.preprocessing import OneHotEncoder
 import matplotlib.pyplot as plt
 
 # Configuración de Supabase (usa tu URL y API Key)
@@ -26,10 +27,24 @@ def load_data():
         st.error(f"Error al cargar datos: {response.status_code} - {response.text}")
         return pd.DataFrame()
 
+# Preprocesamiento de datos
+def preprocess_data(data):
+    # Variables categóricas a codificar
+    categorical_cols = ['Clima', 'Nivel_Trafico', 'Momento_Del_Dia', 'Tipo_Vehiculo']
+    encoder = OneHotEncoder(sparse=False, drop='first')
+    encoded_data = pd.DataFrame(encoder.fit_transform(data[categorical_cols]), columns=encoder.get_feature_names_out())
+    
+    # Unir las variables codificadas al dataset original
+    data = pd.concat([data.drop(columns=categorical_cols), encoded_data], axis=1)
+    return data
+
 # Entrenamiento del modelo
 def train_model(data):
+    # Preprocesar datos
+    data = preprocess_data(data)
+    
     # Selección de características y variable objetivo
-    X = data[['Distancia_km', 'Tiempo_Preparacion_min', 'Experiencia_Repartidor_anos']]
+    X = data.drop(columns=['ID_Pedido', 'Tiempo_Entrega_min'])
     y = data['Tiempo_Entrega_min']
     
     # División de datos en entrenamiento y prueba
