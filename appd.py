@@ -31,6 +31,13 @@ def leer_registros():
 # Función para agregar un nuevo registro
 def agregar_registro(registro):
     try:
+        # Convertir los índices de predicción a texto para guardarlos en la base de datos
+        registro["Clima"] = clima_opciones[registro["Clima"]]
+        registro["Nivel_Trafico"] = nivel_trafico_opciones[registro["Nivel_Trafico"]]
+        registro["Momento_Del_Dia"] = momento_dia_opciones[registro["Momento_Del_Dia"]]
+        registro["Tipo_Vehiculo"] = tipo_vehiculo_opciones[registro["Tipo_Vehiculo"]]
+
+        # Insertar el registro en Supabase
         supabase.table("nuevos_datos").insert(registro).execute()
     except Exception as e:
         st.error(f"Error al agregar el registro: {e}")
@@ -38,6 +45,13 @@ def agregar_registro(registro):
 # Función para actualizar un registro
 def actualizar_registro(id_pedido, valores_actualizados):
     try:
+        # Convertir los índices de predicción a texto antes de actualizar
+        valores_actualizados["Clima"] = clima_opciones[valores_actualizados["Clima"]]
+        valores_actualizados["Nivel_Trafico"] = nivel_trafico_opciones[valores_actualizados["Nivel_Trafico"]]
+        valores_actualizados["Momento_Del_Dia"] = momento_dia_opciones[valores_actualizados["Momento_Del_Dia"]]
+        valores_actualizados["Tipo_Vehiculo"] = tipo_vehiculo_opciones[valores_actualizados["Tipo_Vehiculo"]]
+
+        # Actualizar el registro en Supabase
         supabase.table("nuevos_datos").update(valores_actualizados).eq("ID_Pedido", id_pedido).execute()
     except Exception as e:
         st.error(f"Error al actualizar el registro: {e}")
@@ -84,7 +98,7 @@ with tabs[1]:
     if st.button("Crear y Predecir Pedido", key="crear_pedido"):
         nuevo_registro = {
             "Distancia_km": float(distancia),
-            "Clima": int(clima_opciones.index(clima)),
+            "Clima": int(clima_opciones.index(clima)),  # Índice para predicción
             "Nivel_Trafico": int(nivel_trafico_opciones.index(nivel_trafico)),
             "Momento_Del_Dia": int(momento_dia_opciones.index(momento_dia)),
             "Tipo_Vehiculo": int(tipo_vehiculo_opciones.index(tipo_vehiculo)),
@@ -107,23 +121,10 @@ with tabs[2]:
         pedido_seleccionado = registros[registros["ID_Pedido"] == id_pedido].iloc[0]
 
         distancia = st.number_input("Distancia (km)", min_value=0.0, value=float(pedido_seleccionado["Distancia_km"]), key="modificar_distancia")
-
-        clima_index = pedido_seleccionado.get("Clima", 0)
-        clima_index = clima_index if isinstance(clima_index, int) and 0 <= clima_index < len(clima_opciones) else 0
-        clima = st.selectbox("Clima del Pedido", options=clima_opciones, index=clima_index, key="modificar_clima")
-
-        nivel_trafico_index = pedido_seleccionado.get("Nivel_Trafico", 0)
-        nivel_trafico_index = nivel_trafico_index if isinstance(nivel_trafico_index, int) and 0 <= nivel_trafico_index < len(nivel_trafico_opciones) else 0
-        nivel_trafico = st.selectbox("Nivel de Tráfico del Pedido", options=nivel_trafico_opciones, index=nivel_trafico_index, key="modificar_trafico")
-
-        momento_dia_index = pedido_seleccionado.get("Momento_Del_Dia", 0)
-        momento_dia_index = momento_dia_index if isinstance(momento_dia_index, int) and 0 <= momento_dia_index < len(momento_dia_opciones) else 0
-        momento_dia = st.selectbox("Momento del Día del Pedido", options=momento_dia_opciones, index=momento_dia_index, key="modificar_momento")
-
-        tipo_vehiculo_index = pedido_seleccionado.get("Tipo_Vehiculo", 0)
-        tipo_vehiculo_index = tipo_vehiculo_index if isinstance(tipo_vehiculo_index, int) and 0 <= tipo_vehiculo_index < len(tipo_vehiculo_opciones) else 0
-        tipo_vehiculo = st.selectbox("Tipo de Vehículo del Pedido", options=tipo_vehiculo_opciones, index=tipo_vehiculo_index, key="modificar_vehiculo")
-
+        clima = st.selectbox("Clima del Pedido", options=clima_opciones, index=clima_opciones.index(pedido_seleccionado["Clima"]), key="modificar_clima")
+        nivel_trafico = st.selectbox("Nivel de Tráfico del Pedido", options=nivel_trafico_opciones, index=nivel_trafico_opciones.index(pedido_seleccionado["Nivel_Trafico"]), key="modificar_trafico")
+        momento_dia = st.selectbox("Momento del Día del Pedido", options=momento_dia_opciones, index=momento_dia_opciones.index(pedido_seleccionado["Momento_Del_Dia"]), key="modificar_momento")
+        tipo_vehiculo = st.selectbox("Tipo de Vehículo del Pedido", options=tipo_vehiculo_opciones, index=tipo_vehiculo_opciones.index(pedido_seleccionado["Tipo_Vehiculo"]), key="modificar_vehiculo")
         tiempo_preparacion = st.number_input("Tiempo de Preparación (min)", min_value=0, value=int(pedido_seleccionado["Tiempo_Preparacion_min"]), key="modificar_tiempo")
         experiencia = st.number_input("Experiencia del Repartidor (años)", min_value=0.0, value=float(pedido_seleccionado["Experiencia_Repartidor_anos"]), key="modificar_experiencia")
 
