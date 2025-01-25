@@ -15,6 +15,9 @@ def upload_to_supabase(dataframe):
         "Content-Type": "application/json"
     }
     
+    # Rellenar valores nulos con un valor predeterminado
+    dataframe['Momento_Del_Dia'] = dataframe['Momento_Del_Dia'].fillna("Desconocido")
+    
     # Convertir cada fila del DataFrame a JSON asegurando serialización correcta
     try:
         data = dataframe.where(pd.notnull(dataframe), None).to_dict(orient="records")  # Reemplaza NaN por None
