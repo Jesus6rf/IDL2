@@ -15,8 +15,12 @@ def upload_to_supabase(dataframe):
         "Content-Type": "application/json"
     }
     
-    # Convertir cada fila del DataFrame a JSON
-    data = dataframe.to_dict(orient="records")
+    # Convertir cada fila del DataFrame a JSON asegurando serialización correcta
+    try:
+        data = dataframe.where(pd.notnull(dataframe), None).to_dict(orient="records")  # Reemplaza NaN por None
+    except Exception as e:
+        return False, f"Error al convertir datos a JSON: {str(e)}"
+    
     response = requests.post(f"{SUPABASE_URL}/rest/v1/{TABLE_NAME}", headers=headers, json=data)
     
     if response.status_code == 201:
