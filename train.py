@@ -13,6 +13,19 @@ SUPABASE_URL = "https://rtporjxjyrkttnvjtqmg.supabase.co"  # URL de Supabase
 SUPABASE_API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0cG9yanhqeXJrdHRudmp0cW1nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjY2OTEzNDAsImV4cCI6MjA0MjI2NzM0MH0.ghyQtdPB-db6_viDlJlQDLDL_h7tAukRWycVyfAE6zk"  # API Key
 TABLE_NAME = "datos_crudos"  # Nombre de la tabla en Supabase
 
+# Valores predeterminados para imputación
+DEFAULT_VALUES = {
+    "ID_Pedido": 0,
+    "Distancia_km": 0.0,
+    "Clima": "Desconocido",
+    "Nivel_Trafico": "Desconocido",
+    "Momento_Del_Dia": "Desconocido",
+    "Tipo_Vehiculo": "Desconocido",
+    "Tiempo_Preparacion_min": 0,
+    "Experiencia_Repartidor_anos": 0,
+    "Tiempo_Entrega_min": 0
+}
+
 # Función para cargar datos desde Supabase
 @st.cache_data
 def load_data_from_supabase():
@@ -27,6 +40,10 @@ def load_data_from_supabase():
         st.error(f"Error al cargar datos: {response.status_code} - {response.text}")
         return pd.DataFrame()
 
+# Imputación de datos
+def impute_data(data):
+    return data.fillna(DEFAULT_VALUES)
+
 # Análisis exploratorio de datos (EDA)
 def perform_eda(data):
     st.subheader("Análisis Exploratorio de Datos (EDA)")
@@ -38,8 +55,8 @@ def perform_eda(data):
     sns.histplot(data["Tiempo_Entrega_min"], kde=True, ax=ax, color="blue")
     st.pyplot(fig)
 
-    st.write("### Mapa de calor de correlación:")
-    corr = data.corr()
+    st.write("### Mapa de calor de correlación (solo columnas numéricas):")
+    corr = data.select_dtypes(include=["float64", "int64"]).corr()
     fig, ax = plt.subplots(figsize=(10, 6))
     sns.heatmap(corr, annot=True, cmap="coolwarm", ax=ax)
     st.pyplot(fig)
@@ -74,31 +91,27 @@ def save_model(model):
 # Interfaz de Streamlit
 st.title("Entrenamiento del Modelo con EDA y Datos desde Supabase")
 
-# Estado de carga de datos
+# Estado de la aplicación
 if "data_loaded" not in st.session_state:
     st.session_state.data_loaded = False
     st.session_state.data = pd.DataFrame()
 
-# Cargar datos desde Supabase solo si no están cargados
+# Cargar datos desde Supabase
 if not st.session_state.data_loaded:
     if st.button("Cargar datos desde Supabase"):
         data = load_data_from_supabase()
         if not data.empty:
             st.session_state.data_loaded = True
-            st.session_state.data = data
-            st.success("Datos cargados correctamente.")
-            st.write("Datos cargados:")
-            st.dataframe(data)
+            st.session_state.data = impute_data(data)
+            st.success("Datos cargados e imputados correctamente.")
+            st.write("Datos después de la imputación:")
+            st.dataframe(st.session_state.data)
 
-# Mostrar análisis exploratorio y entrenar modelo si los datos ya están cargados
+# Realizar EDA y entrenar el modelo si los datos ya están cargados
 if st.session_state.data_loaded:
-    st.write("### Datos cargados:")
-    st.dataframe(st.session_state.data)
-
-    # Análisis Exploratorio de Datos
+    st.subheader("Análisis Exploratorio de Datos (EDA)")
     perform_eda(st.session_state.data)
 
-    # Entrenar modelo
     st.subheader("Entrenamiento del Modelo")
     if st.button("Entrenar Modelo"):
         model, mse, r2, X_test, y_test, y_pred = train_model(st.session_state.data)
@@ -106,7 +119,7 @@ if st.session_state.data_loaded:
         st.write(f"**Error cuadrático medio (MSE):** {mse:.2f}")
         st.write(f"**Coeficiente de determinación (R²):** {r2:.2f}")
 
-        # Mostrar una comparación de valores reales vs predichos
+        # Mostrar comparación de valores reales vs predichos
         st.write("### Comparación entre valores reales y predichos:")
         comparison = pd.DataFrame({"Real": y_test, "Predicho": y_pred}).reset_index(drop=True)
         st.dataframe(comparison.head())
