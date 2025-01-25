@@ -11,7 +11,7 @@ SUPABASE_URL = "https://rtporjxjyrkttnvjtqmg.supabase.co"  # Reemplaza con tu UR
 SUPABASE_API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0cG9yanhqeXJrdHRudmp0cW1nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjY2OTEzNDAsImV4cCI6MjA0MjI2NzM0MH0.ghyQtdPB-db6_viDlJlQDLDL_h7tAukRWycVyfAE6zk"  # Reemplaza con tu API Key
 
 # Función para cargar datos desde Supabase
-@st.cache
+@st.cache_data
 def load_data():
     headers = {
         "apikey": SUPABASE_API_KEY,
@@ -23,7 +23,7 @@ def load_data():
         data = pd.DataFrame(response.json())
         return data
     else:
-        st.error(f"Error al cargar datos: {response.status_code}")
+        st.error(f"Error al cargar datos: {response.status_code} - {response.text}")
         return pd.DataFrame()
 
 # Entrenamiento del modelo
