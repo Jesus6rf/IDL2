@@ -3,8 +3,8 @@ import pandas as pd
 import requests
 
 # Configuración de Supabase
-SUPABASE_URL = "https://tu-supabase-url.supabase.co"  # Reemplaza con tu URL de Supabase
-SUPABASE_API_KEY = "tu-api-key"  # Reemplaza con tu API Key
+SUPABASE_URL = "https://rtporjxjyrkttnvjtqmg.supabase.co"  # Reemplaza con tu URL de Supabase
+SUPABASE_API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0cG9yanhqeXJrdHRudmp0cW1nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjY2OTEzNDAsImV4cCI6MjA0MjI2NzM0MH0.ghyQtdPB-db6_viDlJlQDLDL_h7tAukRWycVyfAE6zk"  # Reemplaza con tu API Key
 TABLE_NAME = "datos_crudos"  # Nombre de tu tabla en Supabase
 
 # Función para cargar datos a Supabase
