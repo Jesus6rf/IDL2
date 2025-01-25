@@ -1,124 +1,69 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
 import requests
-import matplotlib.pyplot as plt
-import seaborn as sns
-from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.metrics import mean_squared_error, r2_score
-import pickle
 
 # Configuración de Supabase
 SUPABASE_URL = "https://rtporjxjyrkttnvjtqmg.supabase.co"  # Reemplaza con tu URL de Supabase
 SUPABASE_API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0cG9yanhqeXJrdHRudmp0cW1nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjY2OTEzNDAsImV4cCI6MjA0MjI2NzM0MH0.ghyQtdPB-db6_viDlJlQDLDL_h7tAukRWycVyfAE6zk"  # Reemplaza con tu API Key
-TABLE_NAME = "datos_crudos"
+TABLE_NAME = "datos_crudos"  # Nombre de tu tabla en Supabase
 
 # Valores predeterminados para reemplazar nulos
 DEFAULT_VALUES = {
-    "ID_Pedido": 0,
-    "Distancia_km": 0.0,
-    "Clima": "Desconocido",
-    "Nivel_Trafico": "Desconocido",
-    "Momento_Del_Dia": "Desconocido",
-    "Tipo_Vehiculo": "Desconocido",
-    "Tiempo_Preparacion_min": 0,
-    "Experiencia_Repartidor_anos": 0,
-    "Tiempo_Entrega_min": 0
+    "ID_Pedido": 0,                   # Valor predeterminado para ID_Pedido
+    "Distancia_km": 0.0,              # Valor predeterminado para Distancia_km
+    "Clima": "Desconocido",           # Valor predeterminado para Clima
+    "Nivel_Trafico": "Desconocido",   # Valor predeterminado para Nivel_Trafico
+    "Momento_Del_Dia": "Desconocido", # Valor predeterminado para Momento_Del_Dia
+    "Tipo_Vehiculo": "Desconocido",   # Valor predeterminado para Tipo_Vehiculo
+    "Tiempo_Preparacion_min": 0,      # Valor predeterminado para Tiempo_Preparacion_min
+    "Experiencia_Repartidor_anos": 0, # Valor predeterminado para Experiencia_Repartidor_anos
+    "Tiempo_Entrega_min": 0           # Valor predeterminado para Tiempo_Entrega_min
 }
 
-# Función para cargar datos desde Supabase
-def load_data_from_supabase():
+# Función para cargar datos a Supabase
+def upload_to_supabase(dataframe):
     headers = {
         "apikey": SUPABASE_API_KEY,
         "Authorization": f"Bearer {SUPABASE_API_KEY}",
+        "Content-Type": "application/json"
     }
-    response = requests.get(f"{SUPABASE_URL}/rest/v1/{TABLE_NAME}", headers=headers, params={"select": "*"})
-    if response.status_code == 200:
-        return pd.DataFrame(response.json())
-    else:
-        st.error(f"Error al cargar datos: {response.status_code} - {response.text}")
-        return pd.DataFrame()
-
-# Función para limpieza e imputación de datos
-def clean_data(dataframe):
+    
+    # Reemplazar valores nulos en todas las columnas con valores predeterminados
     dataframe = dataframe.fillna(DEFAULT_VALUES)
-    return dataframe
-
-# Análisis exploratorio de datos
-def perform_eda(dataframe):
-    st.subheader("Análisis Exploratorio de Datos (EDA)")
-    st.write("Resumen estadístico:")
-    st.write(dataframe.describe())
     
-    st.write("Distribución de la variable objetivo (`Tiempo_Entrega_min`):")
-    fig, ax = plt.subplots()
-    sns.histplot(dataframe["Tiempo_Entrega_min"], kde=True, ax=ax)
-    st.pyplot(fig)
-
-    st.write("Correlación entre variables:")
-    corr = dataframe.corr()
-    fig, ax = plt.subplots(figsize=(10, 8))
-    sns.heatmap(corr, annot=True, cmap="coolwarm", ax=ax)
-    st.pyplot(fig)
-
-# Entrenamiento del modelo
-def train_model(dataframe):
-    X = dataframe.drop(columns=["ID_Pedido", "Tiempo_Entrega_min"])
-    X = pd.get_dummies(X, drop_first=True)  # Codificación de variables categóricas
-    y = dataframe["Tiempo_Entrega_min"]
+    # Convertir cada fila del DataFrame a JSON
+    try:
+        data = dataframe.to_dict(orient="records")
+    except Exception as e:
+        return False, f"Error al preparar los datos: {str(e)}"
     
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-    
-    model = RandomForestRegressor(random_state=42)
-    model.fit(X_train, y_train)
-    
-    y_pred = model.predict(X_test)
-    mse = mean_squared_error(y_test, y_pred)
-    r2 = r2_score(y_test, y_pred)
-    
-    return model, X_test, y_test, y_pred, mse, r2
-
-# Descarga del modelo en formato .pkl
-def save_model(model):
-    with open("modelo_entrenado.pkl", "wb") as f:
-        pickle.dump(model, f)
-    st.success("Modelo guardado como `modelo_entrenado.pkl`.")
-    with open("modelo_entrenado.pkl", "rb") as f:
-        st.download_button("Descargar Modelo", f, file_name="modelo_entrenado.pkl")
+    # Enviar los datos a Supabase
+    try:
+        response = requests.post(f"{SUPABASE_URL}/rest/v1/{TABLE_NAME}", headers=headers, json=data)
+        if response.status_code == 201:
+            return True, "Datos subidos exitosamente."
+        else:
+            return False, f"Error al subir datos: {response.status_code} - {response.text}"
+    except requests.exceptions.RequestException as e:
+        return False, f"Error de conexión: {str(e)}"
 
 # Interfaz de Streamlit
-st.title("Pipeline Completo: Limpieza, EDA, Entrenamiento y Exportación del Modelo")
+st.title("Subir Documento y Guardar en Supabase")
+st.write("Sube un archivo CSV para cargarlo directamente en la base de datos de Supabase.")
 
-# Cargar datos
-st.subheader("Cargar Datos")
-if st.button("Cargar datos desde Supabase"):
-    data = load_data_from_supabase()
-    if not data.empty:
-        st.success("Datos cargados correctamente.")
-        st.dataframe(data)
+# Subir archivo
+uploaded_file = st.file_uploader("Elige un archivo CSV", type=["csv"])
 
-        # Limpieza e imputación
-        st.subheader("Limpieza e Imputación de Datos")
-        cleaned_data = clean_data(data)
-        st.write("Datos después de la limpieza:")
-        st.dataframe(cleaned_data)
-
-        # Análisis exploratorio
-        perform_eda(cleaned_data)
-
-        # Entrenamiento del modelo
-        st.subheader("Entrenamiento del Modelo")
-        if st.button("Entrenar Modelo"):
-            model, X_test, y_test, y_pred, mse, r2 = train_model(cleaned_data)
-            st.write(f"**Métricas del Modelo:**")
-            st.write(f"- MSE: {mse:.2f}")
-            st.write(f"- R²: {r2:.2f}")
-            
-            # Mostrar predicciones
-            st.write("Comparación entre valores reales y predichos:")
-            comparison = pd.DataFrame({"Real": y_test, "Predicho": y_pred}).reset_index(drop=True)
-            st.write(comparison.head())
-
-            # Guardar el modelo
-            save_model(model)
+if uploaded_file is not None:
+    # Leer el archivo CSV
+    dataframe = pd.read_csv(uploaded_file)
+    st.write("Previsualización de los datos cargados:")
+    st.dataframe(dataframe)
+    
+    # Botón para subir los datos a Supabase
+    if st.button("Subir a Supabase"):
+        success, message = upload_to_supabase(dataframe)
+        if success:
+            st.success(message)
+        else:
+            st.error(message)
