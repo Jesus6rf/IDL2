@@ -73,15 +73,15 @@ with tabs[0]:
 # Pestaña: Crear Pedido
 with tabs[1]:
     st.subheader("Crear un nuevo pedido")
-    distancia = st.number_input("Distancia (km)", min_value=0.0)
-    clima = st.selectbox("Clima del Pedido", options=clima_opciones)
-    nivel_trafico = st.selectbox("Nivel de Tráfico del Pedido", options=nivel_trafico_opciones)
-    momento_dia = st.selectbox("Momento del Día del Pedido", options=momento_dia_opciones)
-    tipo_vehiculo = st.selectbox("Tipo de Vehículo del Pedido", options=tipo_vehiculo_opciones)
-    tiempo_preparacion = st.number_input("Tiempo de Preparación (min)", min_value=0)
-    experiencia = st.number_input("Experiencia del Repartidor (años)", min_value=0.0)
+    distancia = st.number_input("Distancia (km)", min_value=0.0, key="crear_distancia")
+    clima = st.selectbox("Clima del Pedido", options=clima_opciones, key="crear_clima")
+    nivel_trafico = st.selectbox("Nivel de Tráfico del Pedido", options=nivel_trafico_opciones, key="crear_trafico")
+    momento_dia = st.selectbox("Momento del Día del Pedido", options=momento_dia_opciones, key="crear_momento")
+    tipo_vehiculo = st.selectbox("Tipo de Vehículo del Pedido", options=tipo_vehiculo_opciones, key="crear_vehiculo")
+    tiempo_preparacion = st.number_input("Tiempo de Preparación (min)", min_value=0, key="crear_tiempo")
+    experiencia = st.number_input("Experiencia del Repartidor (años)", min_value=0.0, key="crear_experiencia")
 
-    if st.button("Crear y Predecir Pedido"):
+    if st.button("Crear y Predecir Pedido", key="crear_pedido"):
         nuevo_registro = {
             "Distancia_km": float(distancia),
             "Clima": int(clima_opciones.index(clima)),
@@ -103,31 +103,31 @@ with tabs[2]:
     st.subheader("Modificar un pedido existente")
     registros = leer_registros()
     if not registros.empty:
-        id_pedido = st.selectbox("Selecciona el ID del Pedido", registros["ID_Pedido"])
+        id_pedido = st.selectbox("Selecciona el ID del Pedido", registros["ID_Pedido"], key="modificar_id")
         pedido_seleccionado = registros[registros["ID_Pedido"] == id_pedido].iloc[0]
 
-        distancia = st.number_input("Distancia (km)", min_value=0.0, value=float(pedido_seleccionado["Distancia_km"]))
+        distancia = st.number_input("Distancia (km)", min_value=0.0, value=float(pedido_seleccionado["Distancia_km"]), key="modificar_distancia")
 
         clima_index = pedido_seleccionado.get("Clima", 0)
         clima_index = clima_index if isinstance(clima_index, int) and 0 <= clima_index < len(clima_opciones) else 0
-        clima = st.selectbox("Clima del Pedido", options=clima_opciones, index=clima_index)
+        clima = st.selectbox("Clima del Pedido", options=clima_opciones, index=clima_index, key="modificar_clima")
 
         nivel_trafico_index = pedido_seleccionado.get("Nivel_Trafico", 0)
         nivel_trafico_index = nivel_trafico_index if isinstance(nivel_trafico_index, int) and 0 <= nivel_trafico_index < len(nivel_trafico_opciones) else 0
-        nivel_trafico = st.selectbox("Nivel de Tráfico del Pedido", options=nivel_trafico_opciones, index=nivel_trafico_index)
+        nivel_trafico = st.selectbox("Nivel de Tráfico del Pedido", options=nivel_trafico_opciones, index=nivel_trafico_index, key="modificar_trafico")
 
         momento_dia_index = pedido_seleccionado.get("Momento_Del_Dia", 0)
         momento_dia_index = momento_dia_index if isinstance(momento_dia_index, int) and 0 <= momento_dia_index < len(momento_dia_opciones) else 0
-        momento_dia = st.selectbox("Momento del Día del Pedido", options=momento_dia_opciones, index=momento_dia_index)
+        momento_dia = st.selectbox("Momento del Día del Pedido", options=momento_dia_opciones, index=momento_dia_index, key="modificar_momento")
 
         tipo_vehiculo_index = pedido_seleccionado.get("Tipo_Vehiculo", 0)
         tipo_vehiculo_index = tipo_vehiculo_index if isinstance(tipo_vehiculo_index, int) and 0 <= tipo_vehiculo_index < len(tipo_vehiculo_opciones) else 0
-        tipo_vehiculo = st.selectbox("Tipo de Vehículo del Pedido", options=tipo_vehiculo_opciones, index=tipo_vehiculo_index)
+        tipo_vehiculo = st.selectbox("Tipo de Vehículo del Pedido", options=tipo_vehiculo_opciones, index=tipo_vehiculo_index, key="modificar_vehiculo")
 
-        tiempo_preparacion = st.number_input("Tiempo de Preparación (min)", min_value=0, value=int(pedido_seleccionado["Tiempo_Preparacion_min"]))
-        experiencia = st.number_input("Experiencia del Repartidor (años)", min_value=0.0, value=float(pedido_seleccionado["Experiencia_Repartidor_anos"]))
+        tiempo_preparacion = st.number_input("Tiempo de Preparación (min)", min_value=0, value=int(pedido_seleccionado["Tiempo_Preparacion_min"]), key="modificar_tiempo")
+        experiencia = st.number_input("Experiencia del Repartidor (años)", min_value=0.0, value=float(pedido_seleccionado["Experiencia_Repartidor_anos"]), key="modificar_experiencia")
 
-        if st.button("Actualizar y Predecir Pedido"):
+        if st.button("Actualizar y Predecir Pedido", key="modificar_pedido"):
             valores_actualizados = {
                 "Distancia_km": float(distancia),
                 "Clima": int(clima_opciones.index(clima)),
@@ -151,8 +151,8 @@ with tabs[3]:
     st.subheader("Eliminar un pedido existente")
     registros = leer_registros()
     if not registros.empty:
-        id_eliminar = st.selectbox("Selecciona el ID del Pedido para eliminar", registros["ID_Pedido"])
-        if st.button("Eliminar Pedido"):
+        id_eliminar = st.selectbox("Selecciona el ID del Pedido para eliminar", registros["ID_Pedido"], key="eliminar_id")
+        if st.button("Eliminar Pedido", key="eliminar_pedido"):
             eliminar_registro(id_eliminar)
             st.success("Pedido eliminado correctamente")
     else:
