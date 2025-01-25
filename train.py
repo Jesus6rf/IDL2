@@ -15,24 +15,22 @@ def upload_to_supabase(dataframe):
         "Content-Type": "application/json"
     }
     
-    # Reemplazar valores nulos con un valor predeterminado
-    dataframe = dataframe.fillna({
-        'Clima': "Desconocido",              # Rellena nulos en "Clima"
-        'Momento_Del_Dia': "Desconocido",    # Rellena nulos en "Momento_Del_Dia"
-    })
-    
-    # Convertir cada fila del DataFrame a JSON asegurando serialización correcta
+    # Validar y reemplazar valores no serializables
     try:
-        data = dataframe.to_dict(orient="records")
+        dataframe = dataframe.where(pd.notnull(dataframe), None)  # Reemplazar NaN por None
+        data = dataframe.to_dict(orient="records")  # Convertir a lista de diccionarios
     except Exception as e:
-        return False, f"Error al convertir datos a JSON: {str(e)}"
+        return False, f"Error al preparar los datos para JSON: {str(e)}"
     
-    response = requests.post(f"{SUPABASE_URL}/rest/v1/{TABLE_NAME}", headers=headers, json=data)
-    
-    if response.status_code == 201:
-        return True, "Datos subidos exitosamente."
-    else:
-        return False, f"Error al subir datos: {response.status_code} - {response.text}"
+    # Enviar los datos a Supabase
+    try:
+        response = requests.post(f"{SUPABASE_URL}/rest/v1/{TABLE_NAME}", headers=headers, json=data)
+        if response.status_code == 201:
+            return True, "Datos subidos exitosamente."
+        else:
+            return False, f"Error al subir datos: {response.status_code} - {response.text}"
+    except requests.exceptions.RequestException as e:
+        return False, f"Error en la conexión con Supabase: {str(e)}"
 
 # Interfaz de Streamlit
 st.title("Subir Documento y Guardar en Supabase")
